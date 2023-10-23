@@ -1,6 +1,6 @@
 
 
-# ROS Hexapod Stack
+# ROS Hexapod Stackc (ROS Noetic)
 
 
 ## 1. Documentation
@@ -25,22 +25,23 @@ Thanks to Shubhankar Das there are two gaits offered, the original sinusoidal tr
 
 ```
 sudo apt-get install git
-sudo apt-get install ros-indigo-sound-play
-sudo apt-get install ros-indigo-diagnostic-updater
-sudo apt-get install ros-indigo-xacro
-sudo apt-get install ros-indigo-openni2-launch
-sudo apt-get install ros-indigo-depthimage-to-laserscan
-sudo apt-get install ros-indigo-joystick-drivers
-sudo apt-get install ros-indigo-imu-filter-madgwick
-sudo apt-get install ros-indigo-robot-localization
-sudo apt-get install ros-indigo-rtabmap
-sudo apt-get install ros-indigo-rtabmap-ros
-sudo apt-get install ros-indigo-robot-state-publisher
-sudo apt-get install ros-indigo-gazebo-ros-control
-sudo apt-get install ros-indigo-navigation
-sudo apt-get install ros-indigo-move_base
-sudo apt-get install ros-indigo-navfn
-sudo apt-get install ros-indigo-amcl
+sudo apt-get install ros-noetic-sound-play-y 
+sudo apt-get install ros-noetic-diagnostic-updater-y 
+sudo apt-get install ros-noetic-xacro
+sudo apt-get install ros-noetic-openni2-launch
+sudo apt-get install ros-noetic-depthimage-to-laserscan
+sudo apt-get install ros-noetic-joystick-drivers
+sudo apt-get install ros-noetic-imu-filter-madgwick
+sudo apt-get install ros-noetic-robot-localization
+sudo apt-get install ros-noetic-rtabmap
+sudo apt-get install ros-noetic-rtabmap-ros
+sudo apt-get install ros-noetic-robot-state-publisher
+sudo apt-get install ros-noetic-gazebo-ros-control
+sudo apt-get install ros-noetic-navigation
+sudo apt-get install ros-noetic-move_base
+sudo apt-get install ros-noetic-navfn
+sudo apt-get install ros-noetic-amcl
+sudo apt-get install ros-noetic-teleop-twist-keyboard
 sudo apt-get install libusb-1.0-0-dev
 ```
 

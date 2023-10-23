@@ -23,7 +23,7 @@
           <remap from="rgb/camera_info_out" to="/rtabmap/camera/depth_registered/camera_info"/>
           <remap from="odom_out"            to="/rtabmap/odometry/synchronized"/>
         </node>
-        <node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" args="--delete_db_on_start">
+        <node name="rtabmap" pkg="rtabmap_slam" type="rtabmap" args="--delete_db_on_start">
           <param name="frame_id" type="string" value="base_link"/>
           <remap from="odom" to="/rtabmap/odometry/synchronized"/>
 
