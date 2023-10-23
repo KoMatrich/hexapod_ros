@@ -15,11 +15,12 @@ Thanks to Shubhankar Das there are two gaits offered, the original sinusoidal tr
 * Contributor: Konstantinos Chatzilygeroudis
 * Contributor: Kurt Eckhardt
 * Contributor: Romain Reignier
+* Contributor: Martin Kocich
 
 ## 2. Expected Hardware for mapping
 
 * Primesense Sensor, Asus Xtion or Intel Realsense
-* IMU (Current master branch uses a Phidgets 3/3/3 Spatial in launch files.)
+* ~~IMU (Current master branch uses a Phidgets 3/3/3 Spatial in launch files.)~~ Not i used
 
 ## 3. Dependencies
 
@@ -90,7 +91,12 @@ roslaunch hexapod_bringup hexapod_full.launch config:=phantomX joy_mapping:=joys
 ## 5. Install
 
 ```
-git clone https://github.com/KevinOchs/hexapod_ros.git . 
+mkdir ws
+cd ws
+mkdir src
+git clone git@github.com:KoMatrich/hexapod_ros.git src
+catkin build
+source devel/setup.bash
 ```
 
 For Raspberry Pi2 please add these compiler optimizations after first build.

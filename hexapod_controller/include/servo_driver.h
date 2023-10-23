@@ -36,7 +36,7 @@
 #include <sensor_msgs/JointState.h>
 
 // Default setting
-#define BAUDRATE    1000000
+#define BAUDRATE    57600
 #define DEVICENAME  "/dev/ttyUSB0"      // Check which port is being used on your controller
 #define PROTOCOL_VERSION   1.0          // See which protocol version is used in the Dynamixel
 #define TORQUE_ON   1
@@ -54,6 +54,7 @@ class ServoDriver
         void transmitServoPositions( const sensor_msgs::JointState &joint_state );
         void makeSureServosAreOn( const sensor_msgs::JointState &joint_state );
         void freeServos( void );
+        void lockServos( void );
     private:
         dynamixel::PortHandler *portHandler = dynamixel::PortHandler::getPortHandler(DEVICENAME); // Initialize PacketHandler instance
         dynamixel::PacketHandler *packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION); // Set the protocol version

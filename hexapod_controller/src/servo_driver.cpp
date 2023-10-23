@@ -40,12 +40,16 @@ ServoDriver::ServoDriver( void )
     if ( portHandler->openPort() )
     {
         ROS_INFO("Succeeded to open the port!");
-            // Set port baudrate
-            if ( portHandler->setBaudRate(BAUDRATE) ) ROS_INFO("Succeeded to change the baudrate!");
-            else ROS_WARN("Failed to change the baudrate!");
-            portOpenSuccess = true;
+        auto currentBaudRate = portHandler->getBaudRate();
+        auto targetBaudRate = BAUDRATE;
+        // Set port baudrate
+        if ( portHandler->setBaudRate(BAUDRATE) ) 
+            ROS_INFO("Succeeded to change the baudrate! (%d) to (%d)", currentBaudRate, targetBaudRate);
+        else
+            ROS_WARN("Failed to change the baudrate! (%d) to (%d)", currentBaudRate, targetBaudRate);
+        portOpenSuccess = true;
     }
-    else ROS_WARN("Failed to open the USB port!, Ignore if using Rviz or Gazbebo");
+    else ROS_WARN("Failed to open the '%s', Ignore if using Rviz or Gazbebo", portHandler->getPortName());
 
     // Stating servos do not have torque applied
     servos_free_ = true;
@@ -71,6 +75,7 @@ ServoDriver::ServoDriver( void )
     goal_pos_.resize( SERVO_COUNT );
     write_pos_.resize( SERVO_COUNT );
     pose_steps_.resize( SERVO_COUNT );
+
     for( int i = 0; i < SERVO_COUNT; i++ )
     {
         ros::param::get( "SERVOS/" + static_cast<std::string>( servo_map_key_[i] ) + "/offset", OFFSET[i] );
@@ -139,18 +144,7 @@ void ServoDriver::makeSureServosAreOn( const sensor_msgs::JointState &joint_stat
         }
         ros::Duration( 0.1 ).sleep();
         // Turn torque on
-        for( int i = 0; i < SERVO_COUNT; i++ ){
-            if( packetHandler->write1ByteTxRx(portHandler, ID[i], TORQUE_ENABLE, TORQUE_ON, &dxl_error) != COMM_SUCCESS && portOpenSuccess )
-            {
-                ROS_WARN("TURN TORQUE ON SERVO FAILED [ID:%02d]", ID[i]);
-                torque_on = false;
-            }
-        }
-        if( torque_on )
-        {
-            ROS_INFO("Hexapod servos torque is now ON.");
-            servos_free_ = false;
-        }
+        lockServos();
     }
 }
 
@@ -255,17 +249,38 @@ void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_s
 void ServoDriver::freeServos( void )
 {
     // Turn off torque
-        for( int i = 0; i < SERVO_COUNT; i++ )
+    for( int i = 0; i < SERVO_COUNT; i++ )
+    {
+        if( packetHandler->write1ByteTxRx(portHandler, ID[i], TORQUE_ENABLE, TORQUE_OFF, &dxl_error) != COMM_SUCCESS && portOpenSuccess )
         {
-            if( packetHandler->write1ByteTxRx(portHandler, ID[i], TORQUE_ENABLE, TORQUE_OFF, &dxl_error) != COMM_SUCCESS && portOpenSuccess )
-            {
-                ROS_WARN("TURN TORQUE OFF FAILED ON SERVO [ID:%02d]", ID[i]);
-                torque_off = false;
-            }
+            ROS_WARN("TURN TORQUE OFF FAILED ON SERVO [ID:%02d]", ID[i]);
+            torque_off = false;
         }
-        if( torque_off )
+    }
+    if( torque_off )
+    {
+        ROS_INFO("Hexapod servos torque is now OFF.");
+        servos_free_ = true;
+    }
+}
+
+//==============================================================================
+// Turn torque on to all servos
+//==============================================================================
+
+void ServoDriver::lockServos( void )
+{
+    // Turn on torque
+    for( int i = 0; i < SERVO_COUNT; i++ ){
+        if( packetHandler->write1ByteTxRx(portHandler, ID[i], TORQUE_ENABLE, TORQUE_ON, &dxl_error) != COMM_SUCCESS && portOpenSuccess )
         {
-            ROS_INFO("Hexapod servos torque is now OFF.");
-            servos_free_ = true;
+            ROS_WARN("TURN TORQUE ON SERVO FAILED [ID:%02d]", ID[i]);
+            torque_on = false;
         }
+    }
+    if( torque_on )
+    {
+        ROS_INFO("Hexapod servos torque is now ON.");
+        servos_free_ = false;
+    }
 }

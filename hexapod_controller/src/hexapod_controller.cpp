@@ -73,8 +73,13 @@ int main( int argc, char **argv )
         // Start button on controller has been pressed stand up
         if( control.getHexActiveState() == true && control.getPrevHexActiveState() == false )
         {
-        ROS_INFO("Hexapod standing up.");
-        while( control.body_.position.z < control.STANDING_BODY_HEIGHT )
+            // Lock servos
+            ROS_INFO("Hexapod servos torque is now on.");
+            servoDriver.lockServos();
+            ros::Duration( 0.5 ).sleep();
+
+            ROS_INFO("Hexapod standing up.");
+            while( control.body_.position.z < control.STANDING_BODY_HEIGHT )
             {
                 control.body_.position.z = control.body_.position.z + 0.001; // 1 mm increment
 
@@ -88,6 +93,7 @@ int main( int argc, char **argv )
                 control.publishTwist( control.gait_vel_ );
             }
             control.setPrevHexActiveState( true );
+            ROS_INFO("Hexapod is now standing.");
         }
 
         // We are live and standing up
@@ -130,6 +136,7 @@ int main( int argc, char **argv )
                 control.publishOdometry( control.gait_vel_ );
                 control.publishTwist( control.gait_vel_ );
             }
+            ROS_INFO("Hexapod is now sitting.");
 
             // Release torque
             ros::Duration( 0.5 ).sleep();
