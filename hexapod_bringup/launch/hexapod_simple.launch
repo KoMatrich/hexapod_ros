@@ -3,7 +3,7 @@
 
 <launch>
     <arg name="config" default="phantomX"/>
-    <arg name="joy_mapping" default="joystick"/>
+    <arg name="joy_mapping" default="joystick_xone"/>
     <rosparam command="load" file="$(find hexapod_description)/params/$(arg config).yaml" />
     <rosparam command="load" file="$(find hexapod_description)/params/dynamixel.yaml" />
     <rosparam command="load" file="$(find hexapod_description)/params/$(arg joy_mapping).yaml" />

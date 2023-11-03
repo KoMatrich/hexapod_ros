@@ -46,8 +46,27 @@ sudo apt-get install ros-noetic-teleop-twist-keyboard
 sudo apt-get install libusb-1.0-0-dev
 ```
 
-**_Joystick_**
+### Joystick
 
+#### XBox
+I tied these
+##### REF [xboxdrv](https://manpages.ubuntu.com/manpages/jammy/man1/xboxdrv.1.html)
+##### REF [ubuntu_xboxdrv](https://github.com/raelgc/ubuntu_xboxdrv)
+```
+sudo apt-add-repository -y ppa:rael-gc/ubuntu-xboxdrv
+sudo apt-get update
+sudo apt-get install ubuntu-xboxdrv
+```
+##### REF [xone](https://github.com/medusalix/xone)
+
+##### pi-bluetooth
+```
+sudo apt-get install pi-bluetooth 
+```
+https://forums.raspberrypi.com/viewtopic.php?t=304000
+https://forums.raspberrypi.com/viewtopic.php?t=207025
+https://forums.raspberrypi.com/viewtopic.php?t=242281
+#### PS3
 
 For pairing a PS3 controller you can either install BlueZ5 or follow the below link.
 
@@ -55,7 +74,7 @@ https://help.ubuntu.com/community/Sixaxis
 
 ## 4. Nodes
 
-**_hexapod_controller_**
+### hexapod_controller
 
 This is the main node of the stack. It handles all control, gait, IK and servo communications with the legs. Minimal latency was required to keep the gait smooth and synced with odometry hence the reason they are all combined in this one node.
 
@@ -75,11 +94,11 @@ This is the main node of the stack. It handles all control, gait, IK and servo c
     twist (geometry_msgs::TwistWithCovarianceStamped) Twist message syncronized with the gait system. 
      
 
-**_hexapod_bringup_**
+### hexapod_bringup
 
 This package has all the launch files. From simple locomotion only to full mapping and localization examples. 
 
-**_hexapod_description_**
+### hexapod_description
 
 This package has all the param files. You will start with one of the param config files to describe your hexapod. It also has params for different telop controllers. The xacro and meshes also reside in this package.
 
@@ -99,13 +118,15 @@ catkin build
 source devel/setup.bash
 ```
 
-For Raspberry Pi2 please add these compiler optimizations after first build.
+### Compiling recomandations
+- please add these compiler optimizations after first build.
+#### Raspberry Pi2
 ```
 [workspace]/build/CMakeCache.txt
 Change: CMAKE_CXX_FLAGS:STRING=-O3 -mfloat-abi=hard -mfpu=neon-vfpv4 -mcpu=cortex-a7
 ```
 
-For ODROID XU3 please add these compiler optimizations after first build.
+#### ODROID XU3
 ```
 [workspace]/build/CMakeCache.txt
 Change: CMAKE_CXX_FLAGS:STRING=-O3 -pipe -march=armv7-a -mcpu=cortex-a9 -mfloat-abi=hard

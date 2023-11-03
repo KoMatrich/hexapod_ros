@@ -17,7 +17,7 @@ MAX_RADIANS_PER_SEC: !degrees 17.629
 
 # Number of head segments
 # First segment would be yaw, second would be pitch
-NUMBER_OF_HEAD_SEGMENTS: 0
+NUMBER_OF_HEAD_SEGMENTS: 2
 
 # Number of Legs
 NUMBER_OF_LEGS: 6
@@ -71,9 +71,7 @@ CYCLE_LENGTH: 50
 LEG_LIFT_HEIGHT: 0.038
 MAX_LIFT_HEIGHT: 0.050
 
-# TRIPOD RIPPLE
 GAIT_STYLE: "TRIPOD"
-
 # Speed in Hz that the servos interpolate between gait poses
 INTERPOLATION_LOOP_RATE: 550
 
@@ -94,7 +92,9 @@ SERVOS: {
     '13': {name: coxa_joint_LM, type: AX, id: 13, ticks: 1024, center: 512, max_radians: !degrees 300, sign: 1, offset: !degrees 0},
     '14': {name: femur_joint_LM, type: AX, id: 15, ticks: 1024, center: 512, max_radians: !degrees 300, sign: 1, offset: !degrees 14},
     '15': {name: tibia_joint_LM, type: AX, id: 17, ticks: 1024, center: 512, max_radians: !degrees 300, sign: 1, offset: !degrees -48},
-    '16': {name: coxa_joint_LF, type: AX, id: 1, ticks: 1024, center: 512, max_radians: !degrees 300, sign: 1, offset: !degrees 0},
+    '16': {name: coxa_joint_LF, type: AX, id: 19, ticks: 1024, center: 512, max_radians: !degrees 300, sign: 1, offset: !degrees 0},
     '17': {name: femur_joint_LF, type: AX, id: 3, ticks: 1024, center: 512, max_radians: !degrees 300, sign: 1, offset: !degrees 14},
     '18': {name: tibia_joint_LF, type: AX, id: 5, ticks: 1024, center: 512, max_radians: !degrees 300, sign: 1, offset: !degrees -48},
+    '19': {name: pan_joint, type: AX, id: 20, ticks: 1024, center: 512, max_radians: !degrees 300, sign: 1, offset: !degrees 0},
+    '20': {name: tilt_joint, type: AX, id: 21, ticks: 1024, center: 512, max_radians: !degrees 300, sign: 1, offset: !degrees 0}
 }
