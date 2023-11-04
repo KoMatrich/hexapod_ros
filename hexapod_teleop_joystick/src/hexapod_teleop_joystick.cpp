@@ -36,8 +36,7 @@
 
 HexapodTeleopJoystick::HexapodTeleopJoystick( void )
 {
-    state_.data = true; // Start in a standing state
-    //TODO: ^ this back to false
+    state_.data = false; // Start in a standing state
     imu_override_.data = false;
     NON_TELEOP = false; // Static but here for a safety precaution
     ros::param::get( "STANDUP_BUTTON", STANDUP_BUTTON );

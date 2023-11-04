@@ -49,7 +49,11 @@ ServoDriver::ServoDriver( void )
             ROS_WARN("Failed to change the baudrate! (%d) to (%d)", currentBaudRate, targetBaudRate);
         portOpenSuccess = true;
     }
-    else ROS_WARN("Failed to open the '%s', Ignore if using Rviz or Gazbebo", portHandler->getPortName());
+    else
+    {
+        ROS_WARN("Failed to open the '%s', Ignore if using Rviz or Gazbebo", portHandler->getPortName());
+        ROS_WARN("Try changing permissions with \"sudo chown $USER %s\"", portHandler->getPortName());
+    }
 
     // Stating servos do not have torque applied
     servos_free_ = true;

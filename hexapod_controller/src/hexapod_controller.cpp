@@ -56,17 +56,17 @@ int main( int argc, char **argv )
     control.publishTwist( control.gait_vel_ );
 
     ros::Time current_time_, last_time_;
+
     current_time_ = ros::Time::now();
     last_time_ = ros::Time::now();
 
     ros::AsyncSpinner spinner( 2 ); // Using 2 threads
     spinner.start();
     ros::Rate loop_rate( control.MASTER_LOOP_RATE );  // Speed limit of loop ( Will go slower than this )
+
+    ROS_INFO("Hexapod Controller is now running.");
     while( ros::ok() )
     {
-        current_time_ = ros::Time::now();
-        double dt = ( current_time_ - last_time_ ).toSec();
-
         // Divide cmd_vel by the loop rate to get appropriate velocities for gait period
         control.partitionCmd_vel( &control.cmd_vel_ );
 
@@ -81,7 +81,7 @@ int main( int argc, char **argv )
             ROS_INFO("Hexapod standing up.");
             while( control.body_.position.z < control.STANDING_BODY_HEIGHT )
             {
-                control.body_.position.z = control.body_.position.z + 0.001; // 1 mm increment
+                control.body_.position.z = control.body_.position.z + 0.001;
 
                 // IK solver for legs and body orientation
                 ik.calculateIK( control.feet_, control.body_, &control.legs_ );
@@ -91,6 +91,10 @@ int main( int argc, char **argv )
                 servoDriver.transmitServoPositions( control.joint_state_ );
                 control.publishOdometry( control.gait_vel_ );
                 control.publishTwist( control.gait_vel_ );
+
+                if( !loop_rate.sleep() ){
+                    ROS_WARN("Loop rate is too slow!");
+                }
             }
             control.setPrevHexActiveState( true );
             ROS_INFO("Hexapod is now standing.");
@@ -120,9 +124,9 @@ int main( int argc, char **argv )
         if( control.getHexActiveState() == false && control.getPrevHexActiveState() == true )
         {
             ROS_INFO("Hexapod sitting down.");
-            while( control.body_.position.z > 0 )
+            while( control.body_.position.z > -0.1 )
             {
-                control.body_.position.z = control.body_.position.z - 0.001; // 1 mm increment
+                control.body_.position.z = control.body_.position.z - 0.001;
 
                 // Gait Sequencer called to make sure we are on all six feet
                 gait.gaitCycle( control.cmd_vel_, &control.feet_, &control.gait_vel_ );
@@ -135,6 +139,8 @@ int main( int argc, char **argv )
                 servoDriver.transmitServoPositions( control.joint_state_ );
                 control.publishOdometry( control.gait_vel_ );
                 control.publishTwist( control.gait_vel_ );
+                
+                loop_rate.sleep();
             }
             ROS_INFO("Hexapod is now sitting.");
 
@@ -157,6 +163,7 @@ int main( int argc, char **argv )
         loop_rate.sleep();
         last_time_ = current_time_;
     }
+    ROS_INFO("Hexapod Controller is now shutting down.");
     return 0;
 }
 
