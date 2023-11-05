@@ -41,6 +41,7 @@ Gait::Gait(void)
     ros::param::get("LEG_LIFT_HEIGHT", LEG_LIFT_HEIGHT);
     ros::param::get("NUMBER_OF_LEGS", NUMBER_OF_LEGS);
     ros::param::get("GAIT_STYLE", GAIT_STYLE);
+
     cycle_period_ = 25;
     is_travelling_ = false;
     in_cycle_ = false;
@@ -50,11 +51,13 @@ Gait::Gait(void)
 
     if (GAIT_STYLE == "TRIPOD")
     {
+        cycle_steps_ = 2;
         gait_factor = 1.0;
         cycle_leg_number_ = {1, 0, 1, 0, 1, 0};
     }
     else if (GAIT_STYLE == "RIPPLE")
     {
+        cycle_steps_ = 3;
         gait_factor = 0.5;
         cycle_leg_number_ = {1, 0, 2, 0, 2, 1};
     }
@@ -70,12 +73,7 @@ void Gait::sequence_change(std::vector<int> &vec)
 {
     for (int i = 0; i < vec.size(); i++)
     {
-        if (vec[i] == 0)
-            vec[i] = 1;
-        else if (vec[i] == 1 && GAIT_STYLE == "RIPPLE")
-            vec[i] = 2;
-        else
-            vec[i] = 0;
+        vec[i] = (vec[i] + 1) % cycle_steps_;
     }
 }
 
@@ -98,32 +96,36 @@ void Gait::cyclePeriod(const geometry_msgs::Pose2D &base, hexapod_msgs::FeetPosi
 
     for (int leg_index = 0; leg_index < NUMBER_OF_LEGS; leg_index++)
     {
-        // Lifts the leg and move it forward
-        if (cycle_leg_number_[leg_index] == 0 && is_travelling_ == true)
+        switch (cycle_leg_number_[leg_index])
         {
+        case 0:
+            if(is_travelling_ == false)
+                break;
+            // Lifts the leg and move it forward
             period_distance = cos(cycle_period_ * PI / CYCLE_LENGTH);
             feet->foot[leg_index].position.x = base.x * period_distance;
             feet->foot[leg_index].position.y = base.y * period_distance;
             feet->foot[leg_index].position.z = LEG_LIFT_HEIGHT * period_height;
             feet->foot[leg_index].orientation.yaw = base.theta * period_distance;
-        }
-        // Moves legs backward pushing the body forward
-        if (cycle_leg_number_[leg_index] == 1)
-        {
+            break;
+            
+        case 1:
+            // Moves legs backward pushing the body forward
             period_distance = cos(cycle_period_ * PI * gait_factor / CYCLE_LENGTH);
             feet->foot[leg_index].position.x = -base.x * period_distance;
             feet->foot[leg_index].position.y = -base.y * period_distance;
             feet->foot[leg_index].position.z = 0;
             feet->foot[leg_index].orientation.yaw = -base.theta * period_distance;
-        }
-        // Moves legs backward pushing the body forward
-        if (cycle_leg_number_[leg_index] == 2)
-        {
+            break;
+
+        case 2:
+            // Moves legs backward pushing the body forward
             period_distance = cos((CYCLE_LENGTH + cycle_period_) * PI * gait_factor / CYCLE_LENGTH);
             feet->foot[leg_index].position.x = -base.x * period_distance;
             feet->foot[leg_index].position.y = -base.y * period_distance;
             feet->foot[leg_index].position.z = 0;
             feet->foot[leg_index].orientation.yaw = -base.theta * period_distance;
+            break;
         }
     }
 
