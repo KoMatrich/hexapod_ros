@@ -67,8 +67,6 @@ class Gait
 
         double period_distance;
         double period_height;
-        double gait_factor;
-        
         
         std::vector<int> cycle_leg_number_; // Leg gait order (grouping) ['RR', 'RM', 'RF', 'LR', 'LM', 'LF']
 };

@@ -52,14 +52,25 @@ Gait::Gait(void)
     if (GAIT_STYLE == "TRIPOD")
     {
         cycle_steps_ = 2;
-        gait_factor = 1.0;
         cycle_leg_number_ = {1, 0, 1, 0, 1, 0};
+    }
+    else if (GAIT_STYLE == "TETRAPOD")
+    {
+        cycle_steps_ = 3;
+        cycle_leg_number_ = {1, 0, 2, 0, 2, 1};
+    }
+    else if (GAIT_STYLE == "WAVE")
+    {
+        cycle_steps_ = 6;
+        cycle_leg_number_ = {0, 1, 2, 3, 4, 5};
     }
     else if (GAIT_STYLE == "RIPPLE")
     {
-        cycle_steps_ = 3;
-        gait_factor = 0.5;
-        cycle_leg_number_ = {1, 0, 2, 0, 2, 1};
+        cycle_steps_ = 6;
+        cycle_leg_number_ = {0, 2, 4, 1, 3, 5};
+    
+    }else{
+        ros::Exception("GAIT_STYLE is not defined");
     }
     period_distance = 0;
     period_height = 0;
@@ -96,7 +107,8 @@ void Gait::cyclePeriod(const geometry_msgs::Pose2D &base, hexapod_msgs::FeetPosi
 
     for (int leg_index = 0; leg_index < NUMBER_OF_LEGS; leg_index++)
     {
-        switch (cycle_leg_number_[leg_index])
+        auto step_index = cycle_leg_number_[leg_index];
+        switch (step_index)
         {
         case 0:
             if(is_travelling_ == false)
@@ -108,19 +120,10 @@ void Gait::cyclePeriod(const geometry_msgs::Pose2D &base, hexapod_msgs::FeetPosi
             feet->foot[leg_index].position.z = LEG_LIFT_HEIGHT * period_height;
             feet->foot[leg_index].orientation.yaw = base.theta * period_distance;
             break;
-            
-        case 1:
+        default:
             // Moves legs backward pushing the body forward
-            period_distance = cos(cycle_period_ * PI * gait_factor / CYCLE_LENGTH);
-            feet->foot[leg_index].position.x = -base.x * period_distance;
-            feet->foot[leg_index].position.y = -base.y * period_distance;
-            feet->foot[leg_index].position.z = 0;
-            feet->foot[leg_index].orientation.yaw = -base.theta * period_distance;
-            break;
-
-        case 2:
-            // Moves legs backward pushing the body forward
-            period_distance = cos((CYCLE_LENGTH + cycle_period_) * PI * gait_factor / CYCLE_LENGTH);
+            auto n = cycle_steps_-1;
+            period_distance = 1.0/n * (cos(cycle_period_ * PI / CYCLE_LENGTH) -1 -2*(step_index-1)) + 1;
             feet->foot[leg_index].position.x = -base.x * period_distance;
             feet->foot[leg_index].position.y = -base.y * period_distance;
             feet->foot[leg_index].position.z = 0;

@@ -71,7 +71,7 @@ CYCLE_LENGTH: 50
 LEG_LIFT_HEIGHT: 0.038
 MAX_LIFT_HEIGHT: 0.050
 
-# TRIPOD RIPPLE
+# TRIPOD TETRAPOD WAVE RIPPLE
 GAIT_STYLE: "TRIPOD"
 
 # Speed in Hz that the servos interpolate between gait poses
