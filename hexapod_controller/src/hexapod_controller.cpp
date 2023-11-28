@@ -92,9 +92,6 @@ int main( int argc, char **argv )
                 control.publishOdometry( control.gait_vel_ );
                 control.publishTwist( control.gait_vel_ );
 
-                if( !loop_rate.sleep() ){
-                    ROS_WARN("Loop rate is too slow!");
-                }
             }
             control.setPrevHexActiveState( true );
             ROS_INFO("Hexapod is now standing.");
@@ -139,8 +136,6 @@ int main( int argc, char **argv )
                 servoDriver.transmitServoPositions( control.joint_state_ );
                 control.publishOdometry( control.gait_vel_ );
                 control.publishTwist( control.gait_vel_ );
-                
-                loop_rate.sleep();
             }
             ROS_INFO("Hexapod is now sitting.");
 
@@ -152,6 +147,7 @@ int main( int argc, char **argv )
             // Locomotion is now shut off
             control.setPrevHexActiveState( false );
         }
+        
         // Sitting down with servo torque off. Publish jointState message every half second
         if( control.getHexActiveState() == false && control.getPrevHexActiveState() == false )
         {
@@ -160,6 +156,7 @@ int main( int argc, char **argv )
             control.publishOdometry( control.gait_vel_ );
             control.publishTwist( control.gait_vel_ );
         }
+        
         loop_rate.sleep();
         last_time_ = current_time_;
     }
