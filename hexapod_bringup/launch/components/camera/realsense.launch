@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- https://github.com/IntelRealSense/realsense-ros/blob/ros1-legacy/realsense2_camera/launch/rs_camera.launch -->
+
+<launch>
+    <include file="$(find realsense2_camera)/launch/rs_camera.launch" >
+      <arg name="initial_reset" value="true" />
+      <arg name="align_depth"   value="true" />
+      <arg name="enable_sync"   value="true" />
+      <arg name="enable_gyro"   value="true" />
+      <arg name="enable_accel"  value="true" />
+    </include>
+</launch>
