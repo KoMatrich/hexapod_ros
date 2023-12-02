@@ -60,7 +60,7 @@ int main( int argc, char **argv )
     current_time_ = ros::Time::now();
     last_time_ = ros::Time::now();
 
-    ros::AsyncSpinner spinner( 2 ); // Using 2 threads
+    ros::AsyncSpinner spinner( 2 ); // Using X threads
     spinner.start();
     ros::Rate loop_rate( control.MASTER_LOOP_RATE );  // Speed limit of loop ( Will go slower than this )
 
@@ -79,7 +79,7 @@ int main( int argc, char **argv )
             ros::Duration( 0.5 ).sleep();
 
             ROS_INFO("Hexapod standing up.");
-            while( control.body_.position.z < control.STANDING_BODY_HEIGHT )
+            while( control.body_.position.z < control.STANDING_BODY_HEIGHT && ros::ok() )
             {
                 control.body_.position.z = control.body_.position.z + 0.001;
 
@@ -121,7 +121,7 @@ int main( int argc, char **argv )
         if( control.getHexActiveState() == false && control.getPrevHexActiveState() == true )
         {
             ROS_INFO("Hexapod sitting down.");
-            while( control.body_.position.z > -0.1 )
+            while( control.body_.position.z > -0.1  && ros::ok() )
             {
                 control.body_.position.z = control.body_.position.z - 0.001;
 

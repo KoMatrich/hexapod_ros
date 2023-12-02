@@ -184,11 +184,11 @@ void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_s
         }
     }
 
-    ros::Rate loop_rate( INTERPOLATION_LOOP_RATE ); // 900 Hz loop
+    ros::Rate loop_rate( INTERPOLATION_LOOP_RATE );
     // If nothing moved we abort no need to send packet with same positions
     if( interpolating != 0 )
     {
-        while( interpolating != 0 )
+        while( interpolating != 0  && ros::ok() )
         {
             // Prepare packet for broadcast
             for( int i = 0; i < SERVO_COUNT; i++ )
