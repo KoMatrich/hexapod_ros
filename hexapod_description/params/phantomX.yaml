@@ -74,8 +74,8 @@ HEAD_MAX_YAW: !degrees 55
 HEAD_MAX_PITCH: !degrees 25
 
 # Body auto levelling parameters
-MAX_BODY_ROLL_COMP: !degrees 12
-MAX_BODY_PITCH_COMP: !degrees 12
+MAX_BODY_ROLL_COMP: !degrees 8
+MAX_BODY_PITCH_COMP: !degrees 8
 COMPENSATE_INCREMENT: !degrees 0.01
 COMPENSATE_TO_WITHIN: !degrees 1
 
