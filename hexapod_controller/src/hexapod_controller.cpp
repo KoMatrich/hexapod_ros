@@ -67,14 +67,10 @@ int main( int argc, char **argv )
     ROS_INFO("Hexapod Controller is now running.");
     while( ros::ok() )
     {
-        // Divide cmd_vel by the loop rate to get appropriate velocities for gait period
-        control.partitionCmd_vel( &control.cmd_vel_ );
-
         // Start button on controller has been pressed stand up
         if( control.getHexActiveState() == true && control.getPrevHexActiveState() == false )
         {
             // Lock servos
-            ROS_INFO("Hexapod servos torque is now on.");
             servoDriver.lockServos();
             ros::Duration( 0.5 ).sleep();
 
@@ -100,6 +96,9 @@ int main( int argc, char **argv )
         // We are live and standing up
         if( control.getHexActiveState() == true && control.getPrevHexActiveState() == true )
         {
+            // Divide cmd_vel by the loop rate to get appropriate velocities for gait period
+            control.partitionCmd_vel( &control.cmd_vel_ );
+            
             // Gait Sequencer
             gait.gaitCycle( control.cmd_vel_, &control.feet_, &control.gait_vel_ );
             control.publishTwist( control.gait_vel_ );
@@ -121,12 +120,13 @@ int main( int argc, char **argv )
         if( control.getHexActiveState() == false && control.getPrevHexActiveState() == true )
         {
             ROS_INFO("Hexapod sitting down.");
+            const geometry_msgs::Twist zero_vel;
             while( control.body_.position.z > -0.1  && ros::ok() )
             {
                 control.body_.position.z = control.body_.position.z - 0.001;
 
                 // Gait Sequencer called to make sure we are on all six feet
-                gait.gaitCycle( control.cmd_vel_, &control.feet_, &control.gait_vel_ );
+                gait.gaitCycle( zero_vel, &control.feet_, &control.gait_vel_ );
 
                 // IK solver for legs and body orientation
                 ik.calculateIK( control.feet_, control.body_, &control.legs_ );
@@ -142,7 +142,6 @@ int main( int argc, char **argv )
             // Release torque
             ros::Duration( 0.5 ).sleep();
             servoDriver.freeServos();
-            ROS_INFO("Hexapod servos torque is now off.");
 
             // Locomotion is now shut off
             control.setPrevHexActiveState( false );
