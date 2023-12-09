@@ -36,7 +36,7 @@
 #include <sensor_msgs/JointState.h>
 
 // Default setting
-#define BAUDRATE    57600
+#define BAUDRATE    1000000
 #define DEVICENAME  "/dev/ttyUSB0"      // Check which port is being used on your controller
 #define PROTOCOL_VERSION   1.0          // See which protocol version is used in the Dynamixel
 #define TORQUE_ON   1
