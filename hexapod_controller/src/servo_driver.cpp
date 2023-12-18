@@ -78,6 +78,7 @@ ServoDriver::ServoDriver( void )
     RAD_TO_SERVO_RESOLUTION.resize( SERVO_COUNT );
     servo_orientation_.resize( SERVO_COUNT );
 
+    cur_load_.resize( SERVO_COUNT );
     cur_pos_.resize( SERVO_COUNT );
     goal_pos_.resize( SERVO_COUNT );
 
@@ -162,8 +163,6 @@ void ServoDriver::makeSureServosAreOn()
                 if( portOpenSuccess ) ROS_WARN("Read error on [ID:%02d]", ID[i]);
             }
         }
-        ros::Duration( 0.1 ).sleep();
-        // Turn torque on
         lockServos();
     }
 }
@@ -292,8 +291,6 @@ int convertLoad(uint32_t data) {
 
 void ServoDriver::getServoLoad( sensor_msgs::JointState &joint_state )
 {
-    int cur_load;
-
     dynamixel::GroupBulkRead groupBulkRead( portHandler, packetHandler );
     
     // Initialize current position as cur since values would be 0 for all servos ( Possibly servos are off till now )
@@ -302,10 +299,8 @@ void ServoDriver::getServoLoad( sensor_msgs::JointState &joint_state )
         // Read present position
         if( packetHandler->read2ByteTxRx(portHandler, ID[i], PRESENT_LOAD_L, &currentLoad, &dxl_error) == COMM_SUCCESS )
         {
-            cur_load = convertLoad(currentLoad);
-            //joint_state.effort[i] = cur_load;
-
-            if(i == 1) ROS_INFO("[ID:%02d]  PresLoad:%02d", ID[i], cur_load);
+            cur_load_[i] = convertLoad(currentLoad); 
+            //ROS_INFO("[ID:%02d]  PresLoad:%02d", ID[i], cur_load_[i]);
         }
         else
         {

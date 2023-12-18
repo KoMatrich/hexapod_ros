@@ -63,6 +63,7 @@ class ServoDriver
     private:
         dynamixel::PortHandler *portHandler = dynamixel::PortHandler::getPortHandler(DEVICENAME); // Initialize PacketHandler instance
         dynamixel::PacketHandler *packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION); // Set the protocol version
+        
         uint8_t dxl_error = 0;                          // Dynamixel error
         uint16_t dxl_present_position = 0;              // Present position
         uint16_t currentPos, currentLoad;               // Current position, current load
@@ -71,6 +72,7 @@ class ServoDriver
         void angleToRes( const sensor_msgs::JointState &joint_state );
         void resToAngle(       sensor_msgs::JointState &joint_state );
 
+        std::vector<int> cur_load_; // Current load of servos
         std::vector<int> cur_pos_;  // Current position of servos
         std::vector<int> goal_pos_; // Goal position of servos
 
