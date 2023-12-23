@@ -25,31 +25,30 @@ Thanks to Shubhankar Das there are two gaits offered, the original sinusoidal tr
 ### Main
 
 ```bash
-sudo apt-get install git
-sudo apt-get install ros-noetic-sound-play-y 
-sudo apt-get install ros-noetic-diagnostic-updater-y 
-sudo apt-get install ros-noetic-xacro
-sudo apt-get install ros-noetic-depthimage-to-laserscan
-sudo apt-get install ros-noetic-joystick-drivers
-sudo apt-get install ros-noetic-imu-filter-madgwick
-sudo apt-get install ros-noetic-robot-localization
-sudo apt-get install ros-noetic-rtabmap
-sudo apt-get install ros-noetic-rtabmap-ros
-sudo apt-get install ros-noetic-robot-state-publisher
-sudo apt-get install ros-noetic-gazebo-ros-control
-sudo apt-get install ros-noetic-navigation
-sudo apt-get install ros-noetic-move_base
-sudo apt-get install ros-noetic-navfn
-sudo apt-get install ros-noetic-amcl
-sudo apt-get install ros-noetic-teleop-twist-keyboard
-sudo apt-get install libusb-1.0-0-dev
+sudo apt-get -y install git
+sudo apt-get -y install ros-noetic-sound-play 
+sudo apt-get -y install ros-noetic-diagnostic-updater 
+sudo apt-get -y install ros-noetic-xacro
+sudo apt-get -y install ros-noetic-depthimage-to-laserscan
+sudo apt-get -y install ros-noetic-joystick-drivers
+sudo apt-get -y install ros-noetic-imu-filter-madgwick
+sudo apt-get -y install ros-noetic-robot-localization
+sudo apt-get -y install ros-noetic-rtabmap
+sudo apt-get -y install ros-noetic-rtabmap-ros
+sudo apt-get -y install ros-noetic-robot-state-publisher
+sudo apt-get -y install ros-noetic-gazebo-ros-control
+sudo apt-get -y install ros-noetic-navigation
+sudo apt-get -y install ros-noetic-move_base
+sudo apt-get -y install ros-noetic-navfn
+sudo apt-get -y install ros-noetic-amcl
+sudo apt-get -y install ros-noetic-teleop-twist-keyboard
+sudo apt-get -y install libusb-1.0-0-dev
 ```
 
 ### [Speed up compilation](http://www.jamessjackson.com/gcc/ccache/distcc/compiling/c++/2017/07/25/ccache-and-distcc/)
 
 ```bash
-sudo apt install ccache
-sudo apt install distcc
+sudo apt-get -y install ccache distcc
 ```
 
 ```bash
@@ -63,13 +62,13 @@ export ROS_PARALLEL_JOBS='-j'$(distcc -j)'  -l'$(distcc -j)
 ### Realsence cammera
 
 ```bash
-sudo apt-get install ros-noetic-realsense2-camera
+sudo apt-get -y install ros-noetic-realsense2-camera
 ```
 
 ### Asus camera
 
 ```bash
-sudo apt-get install ros-noetic-openni2-launch
+sudo apt-get -y install ros-noetic-openni2-launch
 ```
 
 ### Joystick
@@ -87,7 +86,7 @@ Depends on how you use controller
 ##### pi-bluetooth
 
 ```
-sudo apt-get install pi-bluetooth 
+sudo apt-get -y install pi-bluetooth 
 ```
 
 ###### ubuntu server
