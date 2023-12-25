@@ -65,6 +65,7 @@ int main( int argc, char **argv )
     ros::Rate loop_rate( control.MASTER_LOOP_RATE );  // Speed limit of loop ( Will go slower than this )
 
     ROS_INFO("Hexapod Controller is now running.");
+    int n;
     while( ros::ok() )
     {
         // Start button on controller has been pressed stand up
@@ -84,7 +85,7 @@ int main( int argc, char **argv )
 
                 // Commit new positions and broadcast over USB2AX as well as jointStates
                 control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
-                servoDriver.transmitServoPositions( control.joint_state_ );
+                                servoDriver.transmitServoPositions( control.joint_state_ );
                 control.publishOdometry( control.gait_vel_ );
                 control.publishTwist( control.gait_vel_ );
 
@@ -108,7 +109,15 @@ int main( int argc, char **argv )
 
             // Commit new positions and broadcast over USB2AX as well as jointStates
             control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
+            
+            int skip = 10; // prevents overloading the servo bus
+            if( n++ >= skip ){
+                servoDriver.getServoLoad( control.joint_state_ );
+                n = 0;
+            }
+            
             servoDriver.transmitServoPositions( control.joint_state_ );
+
             control.publishOdometry( control.gait_vel_ );
             control.publishTwist( control.gait_vel_ );
 

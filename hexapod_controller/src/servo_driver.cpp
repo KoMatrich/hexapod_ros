@@ -59,9 +59,11 @@ ServoDriver::ServoDriver( void )
     servos_free_ = true;
     ros::param::get( "TORQUE_ENABLE", TORQUE_ENABLE );
     ros::param::get( "PRESENT_POSITION_L", PRESENT_POSITION_L );
+    ros::param::get( "PRESENT_LOAD_L", PRESENT_LOAD_L );
     ros::param::get( "GOAL_POSITION_L", GOAL_POSITION_L );
     ros::param::get( "SERVOS", SERVOS );
     ros::param::get( "INTERPOLATION_LOOP_RATE", INTERPOLATION_LOOP_RATE );
+
     for( XmlRpc::XmlRpcValue::iterator it = SERVOS.begin(); it != SERVOS.end(); it++ )
     {
         servo_map_key_.push_back( it->first );
@@ -75,8 +77,11 @@ ServoDriver::ServoDriver( void )
     MAX_RADIANS.resize( SERVO_COUNT );
     RAD_TO_SERVO_RESOLUTION.resize( SERVO_COUNT );
     servo_orientation_.resize( SERVO_COUNT );
+
+    cur_load_.resize( SERVO_COUNT );
     cur_pos_.resize( SERVO_COUNT );
     goal_pos_.resize( SERVO_COUNT );
+
     write_pos_.resize( SERVO_COUNT );
     pose_steps_.resize( SERVO_COUNT );
 
@@ -108,10 +113,10 @@ ServoDriver::~ServoDriver( void )
 }
 
 //==============================================================================
-// Convert angles to servo resolution each leg and head pan
+// Convert angles to servo resolution each leg
 //==============================================================================
 
-void ServoDriver::convertAngles( const sensor_msgs::JointState &joint_state )
+void ServoDriver::angleToRes( const sensor_msgs::JointState &joint_state )
 {
     for( int i = 0; i < SERVO_COUNT; i++ )
     {
@@ -120,10 +125,22 @@ void ServoDriver::convertAngles( const sensor_msgs::JointState &joint_state )
 }
 
 //==============================================================================
+// Convert servo resolution to angles each leg
+//==============================================================================
+
+void ServoDriver::resToAngle( sensor_msgs::JointState &joint_state )
+{
+    for( int i = 0; i < SERVO_COUNT; i++ )
+    {
+        joint_state.position[i] = ( cur_pos_[i] - CENTER[i] ) / RAD_TO_SERVO_RESOLUTION[i] + ( servo_orientation_[i] * OFFSET[i] );
+    }
+}
+
+//==============================================================================
 // Turn torque on and read current positions
 //==============================================================================
 
-void ServoDriver::makeSureServosAreOn( const sensor_msgs::JointState &joint_state )
+void ServoDriver::makeSureServosAreOn()
 {
     if( !servos_free_ )
     {
@@ -146,8 +163,6 @@ void ServoDriver::makeSureServosAreOn( const sensor_msgs::JointState &joint_stat
                 if( portOpenSuccess ) ROS_WARN("Read error on [ID:%02d]", ID[i]);
             }
         }
-        ros::Duration( 0.1 ).sleep();
-        // Turn torque on
         lockServos();
     }
 }
@@ -159,8 +174,8 @@ void ServoDriver::makeSureServosAreOn( const sensor_msgs::JointState &joint_stat
 void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_state )
 {
     dynamixel::GroupSyncWrite groupSyncWrite( portHandler, packetHandler, GOAL_POSITION_L, LEN_GOAL_POSITION );
-    convertAngles( joint_state ); // Convert angles to servo resolution
-    makeSureServosAreOn( joint_state );
+    angleToRes( joint_state ); // Convert angles to servo resolution
+    makeSureServosAreOn();
 
     int interpolating = 0;
     int complete[SERVO_COUNT];
@@ -232,7 +247,7 @@ void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_s
             // Broadcast packet over U2D2
             if( writeParamSuccess )
             {
-                if( groupSyncWrite.txPacket() != COMM_SUCCESS && portOpenSuccess ) ROS_WARN("Position write not successfull!!");
+                if( groupSyncWrite.txPacket() != COMM_SUCCESS && portOpenSuccess ) ROS_WARN("Position write not successful!");
             }
             groupSyncWrite.clearParam();
             loop_rate.sleep();
@@ -244,6 +259,54 @@ void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_s
         }
     }
     loop_rate.sleep();
+}
+
+//==============================================================================
+// Convert load data to a signed integer
+//==============================================================================
+
+int convertLoad(uint32_t data) {
+    //REF: https://emanual.robotis.com/docs/en/dxl/ax/ax-12a/#present-load-40
+
+    // Mask for extracting the load direction (bit 10)
+    constexpr uint32_t loadDirectionMask = 1 << 10;
+    // Mask for extracting the load ratio (bits 9 to 0)
+    constexpr uint32_t loadRatioMask = 0x3FF;
+
+    // Extract the load direction
+    bool loadDirection = (data & loadDirectionMask) != 0;
+
+    // Extract the load ratio
+    int loadRatio = data & loadRatioMask;
+
+    // Change sign if needed
+    loadRatio = loadDirection ? -loadRatio : loadRatio;
+
+    return loadRatio;
+}
+
+//==============================================================================
+// Read the load of each servo
+//==============================================================================
+
+void ServoDriver::getServoLoad( sensor_msgs::JointState &joint_state )
+{
+    dynamixel::GroupBulkRead groupBulkRead( portHandler, packetHandler );
+    
+    // Initialize current position as cur since values would be 0 for all servos ( Possibly servos are off till now )
+    for( int i = 0; i < SERVO_COUNT; i++ )
+    {
+        // Read present position
+        if( packetHandler->read2ByteTxRx(portHandler, ID[i], PRESENT_LOAD_L, &currentLoad, &dxl_error) == COMM_SUCCESS )
+        {
+            cur_load_[i] = convertLoad(currentLoad); 
+            //ROS_INFO("[ID:%02d]  PresLoad:%02d", ID[i], cur_load_[i]);
+        }
+        else
+        {
+            if( portOpenSuccess ) ROS_WARN("Read error on [ID:%02d]", ID[i]);
+        }
+    }
 }
 
 //==============================================================================
