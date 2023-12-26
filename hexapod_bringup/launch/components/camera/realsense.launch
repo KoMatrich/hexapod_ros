@@ -4,7 +4,6 @@
 <launch>
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
     <arg name="initial_reset" value="true"/>
-    <arg name="device_type" value="d435i"/>
     <!-- <arg name="filters" value="pointcloud"/> -->
 
     <!-- needed for imu topic -->
