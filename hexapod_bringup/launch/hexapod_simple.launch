@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Minimal bringup - just locomotion and joy teleop no visual nodes launch file ( Normal use, visual ran on remote desktop ) -->
+<!-- Minimal bringup - just locomotion and joy teleop no visual nodes launch file -->
 
 <launch>
     <arg name="config" default="phantomX"/>
