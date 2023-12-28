@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- rtabmap launch file -->
+
+<launch>
+  <!-- Publish static transform from base_link to camera_link ; Adapt z-Value to the correct camera height -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_head_tilt_link" args="0 0 0.098 0 0 0  /base_link /head_tilt_link"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_camera_link" args="0 0 0.098 0 0 0  /base_link /camera_link"/>
+
+  <node name="depthimage_to_laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan">
+    <!-- http://wiki.ros.org/depthimage_to_laserscan -->
+    <param name="scan_height" value="10" />
+    <param name="output_frame_id" value="body_link" />
+
+    <!-- INPUTS -->
+    <remap from="image" to="/camera/depth/image_rect" />
+
+    <!-- OUTPUTS -->
+    <remap from="camera/scan" to="scan" />
+  </node>
+
+  <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
+    <arg name="args" value="delete_db_on_start"/>
+    <arg name="rtabmap_viz" value="false"/>
+    <arg name="frame_id" value="base_link"/>
+    <arg name="rgbd_sync" value="true"/>
+
+    <arg name="approx_sync_max_interval" value="0.01"/>
+    <arg name="queue_size" value="30"/>
+
+    <arg name="subscribe_scan" value="true"/>
+    <arg name="scan_topic" value="scan"/>
+  </include>
+</launch>
