@@ -41,14 +41,30 @@
 //=============================================================================
 // Define structs and classes for gait system
 //=============================================================================
+
+// Defines available gait styles
+enum Gait_Style
+{
+    TRIPOD,
+    TETRAPOD,
+    WAVE,
+    RIPPLE,
+    NUM_GAIT_STYLES // utility enum
+};
+
 class Gait
 {
     public:
         Gait( void );
         void gaitCycle( const geometry_msgs::Twist &cmd_vel, hexapod_msgs::FeetPositions *feet, geometry_msgs::Twist *gait_vel );
+        
+        bool switch_gait;         // Switch gait next cycle
+        Gait_Style nextGait();    // Returns next planed gait style
+        
     private:
         void sequence_change( std::vector<int> &vec );
         void cyclePeriod( const geometry_msgs::Pose2D &base, hexapod_msgs::FeetPositions *feet, geometry_msgs::Twist *gait_vel );
+        void setupGait();
 
         geometry_msgs::Pose2D smooth_base_;
         ros::Time current_time_, last_time_;
@@ -59,7 +75,6 @@ class Gait
         int CYCLE_LENGTH;         // Number of steps in cycle
         int NUMBER_OF_LEGS;       // Leg order in cycle of the leg
         double LEG_LIFT_HEIGHT;   // Height of a leg cycle
-        std::string GAIT_STYLE;   // gait style Tripod or Ripple
 
         int cycle_steps_;         // Number of steps in cycle
         int cycle_period_;        // Current period in cycle
@@ -69,6 +84,9 @@ class Gait
         double period_height;
         
         std::vector<int> cycle_leg_number_; // Leg gait order (grouping) ['RR', 'RM', 'RF', 'LR', 'LM', 'LF']
+
+        Gait_Style active_gait;   // Active gait style
+        uint gait_index_offset_;  // Time offset for gait cycle
 };
 
 #endif // GAIT_H_

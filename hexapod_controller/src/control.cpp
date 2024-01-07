@@ -84,6 +84,7 @@ Control::Control( void )
 
     // Topics we are subscribing
     cmd_vel_sub_ = nh_.subscribe<geometry_msgs::Twist>( "/cmd_vel", 1, &Control::cmd_velCallback, this );
+    cmd_gait_switch_ = nh_.subscribe<std_msgs::Bool>( "/cmd_gait_switch", 1, &Control::cmd_gaitSwitchCallback, this );
     body_scalar_sub_ = nh_.subscribe<geometry_msgs::AccelStamped>( "/body_scalar", 1, &Control::bodyCallback, this );
     head_scalar_sub_ = nh_.subscribe<geometry_msgs::AccelStamped>( "/head_scalar", 1, &Control::headCallback, this );
     state_sub_ = nh_.subscribe<std_msgs::Bool>( "/state", 1, &Control::stateCallback, this );
@@ -274,6 +275,14 @@ void Control::cmd_velCallback( const geometry_msgs::TwistConstPtr &cmd_vel_msg )
     cmd_vel_incoming_.linear.x = cmd_vel_msg->linear.x;
     cmd_vel_incoming_.linear.y = cmd_vel_msg->linear.y;
     cmd_vel_incoming_.angular.z = cmd_vel_msg->angular.z;
+}
+
+void Control::cmd_gaitSwitchCallback( const std_msgs::BoolConstPtr &cmd_gait_msg_ ){
+    if ( !cmd_gait_switch_incoming_ && cmd_gait_msg_->data ) {
+        // Rising edge detection
+        cmd_gait_switch_pulse = true;
+    }
+    cmd_gait_switch_incoming_ = cmd_gait_msg_->data;
 }
 
 //==============================================================================

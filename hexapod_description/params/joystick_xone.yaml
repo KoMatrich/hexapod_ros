@@ -10,6 +10,7 @@
 STANDUP_BUTTON: 3 # Y
 SITDOWN_BUTTON: 0 # A
 
+GAIT_SWITCH_BUTTON: 4 # LB
 BODY_ROTATION_BUTTON: 5 # RB
 
 # ================================#

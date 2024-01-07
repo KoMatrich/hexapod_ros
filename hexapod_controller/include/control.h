@@ -77,6 +77,7 @@ class Control
         geometry_msgs::Twist gait_vel_;
         geometry_msgs::Twist cmd_vel_;
 
+        bool cmd_gait_switch_pulse;      //rising edge detected (manually restarted)
     private:
         hexapod_msgs::Sounds sounds_; // Sound bool array
         std_msgs::Bool imu_override_; // Override body levelling for body manipulation
@@ -101,9 +102,13 @@ class Control
         tf::TransformBroadcaster odom_broadcaster;
         geometry_msgs::Twist cmd_vel_incoming_;
 
+        bool cmd_gait_switch_incoming_;   //last incoming state of switch button
+
         // Topics we are subscribing
         ros::Subscriber cmd_vel_sub_;
         void cmd_velCallback( const geometry_msgs::TwistConstPtr &cmd_vel_msg );
+        ros::Subscriber cmd_gait_switch_;
+        void cmd_gaitSwitchCallback( const std_msgs::BoolConstPtr &cmd_gait_msg_ );
         ros::Subscriber body_scalar_sub_;
         void bodyCallback( const geometry_msgs::AccelStampedConstPtr &body_scalar_msg );
         ros::Subscriber head_scalar_sub_;

@@ -38,10 +38,12 @@ HexapodTeleopJoystick::HexapodTeleopJoystick( void )
 {
     state_.data = false; // Start in a standing state
     imu_override_.data = false;
+    gait_switch_.data = false;
     NON_TELEOP = false; // Static but here for a safety precaution
     ros::param::get( "STANDUP_BUTTON", STANDUP_BUTTON );
     ros::param::get( "SITDOWN_BUTTON", SITDOWN_BUTTON );
     ros::param::get( "BODY_ROTATION_BUTTON", BODY_ROTATION_BUTTON );
+    ros::param::get( "GAIT_SWITCH_BUTTON", GAIT_SWITCH_BUTTON );
     ros::param::get( "FORWARD_BACKWARD_AXES", FORWARD_BACKWARD_AXES );
     ros::param::get( "LEFT_RIGHT_AXES", LEFT_RIGHT_AXES );
     ros::param::get( "YAW_ROTATION_AXES", YAW_ROTATION_AXES );
@@ -53,6 +55,7 @@ HexapodTeleopJoystick::HexapodTeleopJoystick( void )
     body_scalar_pub_ = nh_.advertise<geometry_msgs::AccelStamped>("/body_scalar", 100);
     head_scalar_pub_ = nh_.advertise<geometry_msgs::AccelStamped>("/head_scalar", 100);
     cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 100);
+    cmd_gait_switch_pub_ = nh_.advertise<std_msgs::Bool>("/cmd_gait_switch", 100);
     state_pub_ = nh_.advertise<std_msgs::Bool>("/state", 100);
     imu_override_pub_ = nh_.advertise<std_msgs::Bool>("/imu/imu_override", 100);
 }
@@ -94,14 +97,18 @@ void HexapodTeleopJoystick::joyCallback( const sensor_msgs::Joy::ConstPtr &joy )
     else
     {
         imu_override_.data = false;
-    }
-
-    // Travelling
-    if( joy->buttons[BODY_ROTATION_BUTTON] != 1 )
-    {
         cmd_vel_.linear.x = joy->axes[FORWARD_BACKWARD_AXES] * MAX_METERS_PER_SEC;
         cmd_vel_.linear.y = -joy->axes[LEFT_RIGHT_AXES] * MAX_METERS_PER_SEC;
         cmd_vel_.angular.z = joy->axes[YAW_ROTATION_AXES] * MAX_RADIANS_PER_SEC;
+    }
+
+    if( joy->buttons[GAIT_SWITCH_BUTTON] == 1 )
+    {
+        gait_switch_.data = true;
+    }
+    else
+    {
+        gait_switch_.data = false;
     }
 }
 
@@ -121,6 +128,7 @@ int main(int argc, char** argv)
             hexapodTeleopJoystick.cmd_vel_pub_.publish( hexapodTeleopJoystick.cmd_vel_ );
             hexapodTeleopJoystick.body_scalar_pub_.publish( hexapodTeleopJoystick.body_scalar_ );
             hexapodTeleopJoystick.head_scalar_pub_.publish( hexapodTeleopJoystick.head_scalar_ );
+            hexapodTeleopJoystick.cmd_gait_switch_pub_.publish( hexapodTeleopJoystick.gait_switch_ );
         }
         hexapodTeleopJoystick.state_pub_.publish( hexapodTeleopJoystick.state_ ); // Always publish for means of an emergency shutdown type situation
         hexapodTeleopJoystick.imu_override_pub_.publish( hexapodTeleopJoystick.imu_override_ );

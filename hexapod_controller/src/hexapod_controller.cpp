@@ -68,6 +68,11 @@ int main( int argc, char **argv )
     int n;
     while( ros::ok() )
     {
+        if( control.cmd_gait_switch_pulse){
+            control.cmd_gait_switch_pulse = false;
+            gait.switch_gait = true;
+        }
+
         // Start button on controller has been pressed stand up
         if( control.getHexActiveState() == true && control.getPrevHexActiveState() == false )
         {
