@@ -82,6 +82,8 @@ Control::Control( void )
     imu_roll_init_ = 0.0;
     imu_pitch_init_ = 0.0;
 
+    gait_switch_incoming_ = false;
+
     // Topics we are subscribing
     cmd_vel_sub_ = nh_.subscribe<geometry_msgs::Twist>( "/cmd_vel", 1, &Control::cmd_velCallback, this );
     cmd_gait_switch_ = nh_.subscribe<std_msgs::Bool>( "/cmd_gait_switch", 1, &Control::cmd_gaitSwitchCallback, this );
@@ -278,11 +280,11 @@ void Control::cmd_velCallback( const geometry_msgs::TwistConstPtr &cmd_vel_msg )
 }
 
 void Control::cmd_gaitSwitchCallback( const std_msgs::BoolConstPtr &cmd_gait_msg_ ){
-    if ( !cmd_gait_switch_incoming_ && cmd_gait_msg_->data ) {
+    if ( (!gait_switch_incoming_) && cmd_gait_msg_->data ) {
         // Rising edge detection
-        cmd_gait_switch_pulse = true;
+        gait_switch_pulse = true;
     }
-    cmd_gait_switch_incoming_ = cmd_gait_msg_->data;
+    gait_switch_incoming_ = cmd_gait_msg_->data;
 }
 
 //==============================================================================

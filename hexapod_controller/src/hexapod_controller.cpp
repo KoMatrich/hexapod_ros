@@ -68,9 +68,11 @@ int main( int argc, char **argv )
     int n;
     while( ros::ok() )
     {
-        if( control.cmd_gait_switch_pulse){
-            control.cmd_gait_switch_pulse = false;
+        if( control.gait_switch_pulse ){
+            control.gait_switch_pulse = false;
+
             gait.switch_gait = true;
+            ROS_INFO("Gait switch pulse received.");
         }
 
         // Start button on controller has been pressed stand up

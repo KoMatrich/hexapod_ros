@@ -40,13 +40,17 @@ Gait::Gait(void)
     ros::param::get("CYCLE_LENGTH", CYCLE_LENGTH);
     ros::param::get("LEG_LIFT_HEIGHT", LEG_LIFT_HEIGHT);
     ros::param::get("NUMBER_OF_LEGS", NUMBER_OF_LEGS);
-
-    cycle_period_ = 25;
+    
     is_travelling_ = false;
     in_cycle_ = false;
+
+    cycle_period_ = 25;
     extra_gait_cycle_ = 1;
+    
     current_time_ = ros::Time::now();
     last_time_ = ros::Time::now();
+
+    active_gait_ = Gait_Style::TRIPOD;
 
     setupGait();
 }
@@ -59,17 +63,18 @@ void Gait::sequence_change(std::vector<int> &vec)
 {
     for (size_t i = 0; i < vec.size(); i++)
 {
-    vec[i] = (vec[i] + 1) % cycle_steps_;
+    vec[i] += 1;
+    vec[i] %= cycle_steps_;
     }
 }
 
 Gait_Style Gait::nextGait(){
     // return next gait style in sequence or loops to first
-    return static_cast<Gait_Style>((active_gait + 1) % Gait_Style::NUM_GAIT_STYLES);
+    return static_cast<Gait_Style>((active_gait_ + 1) % Gait_Style::NUM_GAIT_STYLES);
 }
 
 void Gait::setupGait(){
-    switch (active_gait)
+    switch (active_gait_)
     {
     case Gait_Style::TRIPOD:
         cycle_steps_ = 2;
@@ -90,6 +95,7 @@ void Gait::setupGait(){
         cycle_steps_ = 6;
         cycle_leg_number_ = {0, 2, 4, 1, 3, 5};
         break;
+
     case Gait_Style::NUM_GAIT_STYLES:
         // wont actually happen
         __builtin_unreachable();
@@ -210,11 +216,10 @@ void Gait::gaitCycle(const geometry_msgs::Twist &cmd_vel, hexapod_msgs::FeetPosi
         cycle_period_ = 0;
 
         if(switch_gait){
-            active_gait = nextGait();
+            active_gait_ = nextGait();
             switch_gait = false;
+            setupGait();
         }
-
-        setupGait();
     }
 
     // Loop cycle and switch the leg groupings for cycle

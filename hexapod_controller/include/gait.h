@@ -85,8 +85,7 @@ class Gait
         
         std::vector<int> cycle_leg_number_; // Leg gait order (grouping) ['RR', 'RM', 'RF', 'LR', 'LM', 'LF']
 
-        Gait_Style active_gait;   // Active gait style
-        uint gait_index_offset_;  // Time offset for gait cycle
+        Gait_Style active_gait_;  // Active gait style
 };
 
 #endif // GAIT_H_
