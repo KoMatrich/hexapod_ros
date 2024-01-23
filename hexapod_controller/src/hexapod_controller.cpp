@@ -70,9 +70,14 @@ int main( int argc, char **argv )
     {
         if( control.gait_switch_pulse ){
             control.gait_switch_pulse = false;
-
-            gait.switch_gait = true;
             ROS_INFO("Gait switch pulse received.");
+
+            if ( gait.switch_gait ){
+                ROS_INFO("Waiting for gait to finish.");
+            }else{
+                ROS_INFO("Switching to next gait.");
+                gait.switch_gait = true;
+            }
         }
 
         // Start button on controller has been pressed stand up

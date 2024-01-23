@@ -60,6 +60,7 @@ class Gait
         
         bool switch_gait;         // Switch gait next cycle
         Gait_Style nextGait();    // Returns next planed gait style
+        Gait_Style getGait(){return active_gait_;};     // Returns current gait style
         
     private:
         void sequence_change( std::vector<int> &vec );

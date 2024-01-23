@@ -214,8 +214,10 @@ void Gait::gaitCycle(const geometry_msgs::Twist &cmd_vel, hexapod_msgs::FeetPosi
     {
         // Reset period to start just to be sure. ( It should be here anyway )
         cycle_period_ = 0;
+    }
 
-        if(switch_gait){
+    if (is_travelling_ == false){
+        if (switch_gait){
             active_gait_ = nextGait();
             switch_gait = false;
             setupGait();
