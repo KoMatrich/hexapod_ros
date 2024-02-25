@@ -289,18 +289,19 @@ int convertLoad(uint32_t data) {
 // Read the load of each servo
 //==============================================================================
 
-void ServoDriver::getServoLoad( sensor_msgs::JointState &joint_state )
-{
+void ServoDriver::getServoLoad( sensor_msgs::JointState *joint_state )
+{   
     dynamixel::GroupBulkRead groupBulkRead( portHandler, packetHandler );
     
-    // Initialize current position as cur since values would be 0 for all servos ( Possibly servos are off till now )
+    joint_state->header.stamp = ros::Time::now();
+    
     for( int i = 0; i < SERVO_COUNT; i++ )
     {
-        // Read present position
-        if( packetHandler->read2ByteTxRx(portHandler, ID[i], PRESENT_LOAD_L, &currentLoad, &dxl_error) == COMM_SUCCESS )
+        // Read present load
+        if( packetHandler->read2ByteTxRx(portHandler, ID[i], PRESENT_LOAD_L, &currentLoad, &dxl_error) == COMM_SUCCESS && portOpenSuccess )
         {
-            cur_load_[i] = convertLoad(currentLoad); 
-            //ROS_INFO("[ID:%02d]  PresLoad:%02d", ID[i], cur_load_[i]);
+            cur_load_[i] = convertLoad(currentLoad);
+            joint_state->effort[i] = (cur_load_[i] + joint_state->effort[i]*4)/5; // Remove noise from load data by averaging
         }
         else
         {

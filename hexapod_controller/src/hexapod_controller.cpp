@@ -48,6 +48,9 @@ int main( int argc, char **argv )
     Ik ik;
     ServoDriver servoDriver;
 
+    const int LOAD_READ_EVERY = 5; // Read load every X th cycle
+    int load_read_skipped = 0; //number of cycles skipped
+
     // Establish initial leg positions for default pose in robot publisher
     gait.gaitCycle( control.cmd_vel_, &control.feet_, &control.gait_vel_ );
     ik.calculateIK( control.feet_, control.body_, &control.legs_ );
@@ -65,7 +68,6 @@ int main( int argc, char **argv )
     ros::Rate loop_rate( control.MASTER_LOOP_RATE );  // Speed limit of loop ( Will go slower than this )
 
     ROS_INFO("Hexapod Controller is now running.");
-    int n;
     while( ros::ok() )
     {
         if( control.gait_switch_pulse ){
@@ -122,13 +124,12 @@ int main( int argc, char **argv )
             // Commit new positions and broadcast over USB2AX as well as jointStates
             control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
             
-            int skip = 10; // prevents overloading the servo bus
-            if( n++ >= skip ){
-                servoDriver.getServoLoad( control.joint_state_ );
-                n = 0;
-            }
-            
             servoDriver.transmitServoPositions( control.joint_state_ );
+            if( load_read_skipped++ >= LOAD_READ_EVERY ){
+                load_read_skipped = 0;
+                // prevents overloading the servo bus
+                servoDriver.getServoLoad( &control.joint_state_ );
+            }
 
             control.publishOdometry( control.gait_vel_ );
             control.publishTwist( control.gait_vel_ );

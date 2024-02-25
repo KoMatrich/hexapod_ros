@@ -54,24 +54,31 @@ Control::Control( void )
     ros::param::get( "COMPENSATE_TO_WITHIN", COMPENSATE_TO_WITHIN );
     ros::param::get( "MASTER_LOOP_RATE", MASTER_LOOP_RATE );
     ros::param::get( "VELOCITY_DIVISION", VELOCITY_DIVISION );
+
     current_time_odometry_ = ros::Time::now();
     last_time_odometry_ = ros::Time::now();
     current_time_cmd_vel_ = ros::Time::now();
     last_time_cmd_vel_ = ros::Time::now();
+
     // Find out how many servos/joints we have
     for( XmlRpc::XmlRpcValue::iterator it = SERVOS.begin(); it != SERVOS.end(); it++ )
     {
         servo_map_key_.push_back( it->first );
     }
+
     joint_state_.name.resize( servo_map_key_.size() );
     joint_state_.position.resize( servo_map_key_.size() );
+    joint_state_.effort.resize( servo_map_key_.size() );
+    
     servo_names_.resize( servo_map_key_.size() );
     servo_orientation_.resize( servo_map_key_.size() );
+
     for( std::size_t i = 0; i < servo_map_key_.size(); i++ )
     {
         ros::param::get( ("/SERVOS/" + static_cast<std::string>( servo_map_key_[i] ) + "/name"), servo_names_[i] );
         ros::param::get( ("/SERVOS/" + static_cast<std::string>( servo_map_key_[i] ) + "/sign"), servo_orientation_[i] );
     }
+
     prev_hex_state_ = false;
     hex_state_ = false;
     imu_init_stored_ = false;

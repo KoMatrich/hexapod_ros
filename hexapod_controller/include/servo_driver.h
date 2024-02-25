@@ -54,7 +54,7 @@ class ServoDriver
         ~ServoDriver( void );
 
         void transmitServoPositions( const sensor_msgs::JointState &joint_state );
-        void getServoLoad( sensor_msgs::JointState &joint_state );
+        void getServoLoad( sensor_msgs::JointState *joint_state );
         
         void makeSureServosAreOn();
 
