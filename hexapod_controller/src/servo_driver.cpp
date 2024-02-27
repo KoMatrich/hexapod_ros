@@ -289,7 +289,7 @@ int convertLoad(uint32_t data) {
 // Read the load of each servo
 //==============================================================================
 
-void ServoDriver::getServoLoad( sensor_msgs::JointState *joint_state )
+void ServoDriver::getServoLoads( sensor_msgs::JointState *joint_state )
 {   
     dynamixel::GroupBulkRead groupBulkRead( portHandler, packetHandler );
     
@@ -307,6 +307,26 @@ void ServoDriver::getServoLoad( sensor_msgs::JointState *joint_state )
         {
             if( portOpenSuccess ) ROS_WARN("Read error on [ID:%02d]", ID[i]);
         }
+    }
+}
+
+//==============================================================================
+// Read the load of servo
+//==============================================================================
+
+void ServoDriver::getServoLoad( sensor_msgs::JointState *joint_state, uint index)
+{   
+    dynamixel::GroupBulkRead groupBulkRead( portHandler, packetHandler );
+
+    // Read present load
+    if( packetHandler->read2ByteTxRx(portHandler, ID[index], PRESENT_LOAD_L, &currentLoad, &dxl_error) == COMM_SUCCESS && portOpenSuccess )
+    {
+        cur_load_[index] = convertLoad(currentLoad);
+        joint_state->effort[index] = (cur_load_[index] + joint_state->effort[index]*4)/5; // Remove noise from load data by averaging
+    }
+    else
+    {
+        if( portOpenSuccess ) ROS_WARN("Read error on [ID:%02d]", ID[index]);
     }
 }
 

@@ -48,8 +48,9 @@ int main( int argc, char **argv )
     Ik ik;
     ServoDriver servoDriver;
 
-    const int LOAD_READ_EVERY = 5; // Read load every X th cycle
+    const int LOAD_READ_EVERY = 10; // Read load every X th cycle
     int load_read_skipped = 0; //number of cycles skipped
+    int current_index = 0; //index of servo to read load from this cycle
 
     // Establish initial leg positions for default pose in robot publisher
     gait.gaitCycle( control.cmd_vel_, &control.feet_, &control.gait_vel_ );
@@ -125,10 +126,14 @@ int main( int argc, char **argv )
             control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
             
             servoDriver.transmitServoPositions( control.joint_state_ );
+            
+            // makes main loop run faster
             if( load_read_skipped++ >= LOAD_READ_EVERY ){
                 load_read_skipped = 0;
-                // prevents overloading the servo bus
-                servoDriver.getServoLoad( &control.joint_state_ );
+
+                // read only one servo load per cycle to prevent large lag spikes
+                current_index = (current_index+1)%servoDriver.getServoCount();
+                servoDriver.getServoLoad( &control.joint_state_, current_index);
             }
 
             control.publishOdometry( control.gait_vel_ );

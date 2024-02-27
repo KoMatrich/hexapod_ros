@@ -54,12 +54,15 @@ class ServoDriver
         ~ServoDriver( void );
 
         void transmitServoPositions( const sensor_msgs::JointState &joint_state );
-        void getServoLoad( sensor_msgs::JointState *joint_state );
+        void getServoLoads( sensor_msgs::JointState *joint_state );
+        void getServoLoad( sensor_msgs::JointState *joint_state, uint index );
         
         void makeSureServosAreOn();
 
         void freeServos( void );
         void lockServos( void );
+
+        int getServoCount(){return SERVO_COUNT;};
     private:
         dynamixel::PortHandler *portHandler = dynamixel::PortHandler::getPortHandler(DEVICENAME); // Initialize PacketHandler instance
         dynamixel::PacketHandler *packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION); // Set the protocol version
