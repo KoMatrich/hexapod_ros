@@ -265,13 +265,13 @@ void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_s
 // Convert load data to a signed integer
 //==============================================================================
 
-int convertLoad(uint32_t data) {
+float convertLoad(uint32_t data) {
     //REF: https://emanual.robotis.com/docs/en/dxl/ax/ax-12a/#present-load-40
 
-    // Mask for extracting the load direction (bit 10)
+    // Mask for extracting the load direction (10. bit)
     constexpr uint32_t loadDirectionMask = 1 << 10;
-    // Mask for extracting the load ratio (bits 9 to 0)
-    constexpr uint32_t loadRatioMask = 0x3FF;
+    // Mask for extracting the load ratio (9. to 0. bits)
+    constexpr uint32_t loadRatioMask = (1 << 10) -1;
 
     // Extract the load direction
     bool loadDirection = (data & loadDirectionMask) != 0;
@@ -282,7 +282,28 @@ int convertLoad(uint32_t data) {
     // Change sign if needed
     loadRatio = loadDirection ? -loadRatio : loadRatio;
 
-    return loadRatio;
+    return loadRatio * 100 / 1024.0;
+}
+
+//==============================================================================
+// Read the load of one servo each call
+//==============================================================================
+
+void ServoDriver::getServoLoadsIterative( sensor_msgs::JointState *joint_state, const int LOAD_READ_EVERY)
+{   
+    static int load_read_skipped = 0; //number of cycles skipped
+    static int current_index = 0; //index of servo to read load from this cycle
+    
+    joint_state->header.stamp = ros::Time::now();
+
+    // makes main loop run faster
+    if( load_read_skipped++ >= LOAD_READ_EVERY ){
+        load_read_skipped = 0;
+
+        // read only one servo load per cycle to prevent large lag spikes
+        current_index = (current_index+1)%SERVO_COUNT;
+        getServoLoad( joint_state, current_index);
+    }
 }
 
 //==============================================================================
@@ -291,22 +312,11 @@ int convertLoad(uint32_t data) {
 
 void ServoDriver::getServoLoads( sensor_msgs::JointState *joint_state )
 {   
-    dynamixel::GroupBulkRead groupBulkRead( portHandler, packetHandler );
-    
     joint_state->header.stamp = ros::Time::now();
     
     for( int i = 0; i < SERVO_COUNT; i++ )
     {
-        // Read present load
-        if( packetHandler->read2ByteTxRx(portHandler, ID[i], PRESENT_LOAD_L, &currentLoad, &dxl_error) == COMM_SUCCESS && portOpenSuccess )
-        {
-            cur_load_[i] = convertLoad(currentLoad);
-            joint_state->effort[i] = (cur_load_[i] + joint_state->effort[i]*4)/5; // Remove noise from load data by averaging
-        }
-        else
-        {
-            if( portOpenSuccess ) ROS_WARN("Read error on [ID:%02d]", ID[i]);
-        }
+        getServoLoad( joint_state, i);
     }
 }
 
@@ -316,13 +326,13 @@ void ServoDriver::getServoLoads( sensor_msgs::JointState *joint_state )
 
 void ServoDriver::getServoLoad( sensor_msgs::JointState *joint_state, uint index)
 {   
-    dynamixel::GroupBulkRead groupBulkRead( portHandler, packetHandler );
-
-    // Read present load
+    joint_state->header.stamp = ros::Time::now();
+    
     if( packetHandler->read2ByteTxRx(portHandler, ID[index], PRESENT_LOAD_L, &currentLoad, &dxl_error) == COMM_SUCCESS && portOpenSuccess )
     {
-        cur_load_[index] = convertLoad(currentLoad);
-        joint_state->effort[index] = (cur_load_[index] + joint_state->effort[index]*4)/5; // Remove noise from load data by averaging
+        cur_load_[index] = servo_orientation_[index] * convertLoad(currentLoad);
+
+        joint_state->effort[index] = (cur_load_[index] + joint_state->effort[index])/2; // Remove noise from load data by averaging
     }
     else
     {

@@ -54,6 +54,8 @@ class ServoDriver
         ~ServoDriver( void );
 
         void transmitServoPositions( const sensor_msgs::JointState &joint_state );
+
+        void getServoLoadsIterative( sensor_msgs::JointState *joint_state, const int LOAD_READ_EVERY);
         void getServoLoads( sensor_msgs::JointState *joint_state );
         void getServoLoad( sensor_msgs::JointState *joint_state, uint index );
         
@@ -75,7 +77,7 @@ class ServoDriver
         void angleToRes( const sensor_msgs::JointState &joint_state );
         void resToAngle(       sensor_msgs::JointState &joint_state );
 
-        std::vector<int> cur_load_; // Current load of servos
+        std::vector<float> cur_load_; // Current load of servos
         std::vector<int> cur_pos_;  // Current position of servos
         std::vector<int> goal_pos_; // Goal position of servos
 

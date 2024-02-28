@@ -48,10 +48,6 @@ int main( int argc, char **argv )
     Ik ik;
     ServoDriver servoDriver;
 
-    const int LOAD_READ_EVERY = 10; // Read load every X th cycle
-    int load_read_skipped = 0; //number of cycles skipped
-    int current_index = 0; //index of servo to read load from this cycle
-
     // Establish initial leg positions for default pose in robot publisher
     gait.gaitCycle( control.cmd_vel_, &control.feet_, &control.gait_vel_ );
     ik.calculateIK( control.feet_, control.body_, &control.legs_ );
@@ -86,11 +82,9 @@ int main( int argc, char **argv )
         // Start button on controller has been pressed stand up
         if( control.getHexActiveState() == true && control.getPrevHexActiveState() == false )
         {
-            // Lock servos
-            servoDriver.lockServos();
-            ros::Duration( 0.5 ).sleep();
-
             ROS_INFO("Hexapod standing up.");
+            servoDriver.lockServos();
+
             while( control.body_.position.z < control.STANDING_BODY_HEIGHT && ros::ok() )
             {
                 control.body_.position.z = control.body_.position.z + 0.001;
@@ -98,15 +92,17 @@ int main( int argc, char **argv )
                 // IK solver for legs and body orientation
                 ik.calculateIK( control.feet_, control.body_, &control.legs_ );
 
-                // Commit new positions and broadcast over USB2AX as well as jointStates
+                // Commit new positions as well as jointStates
                 control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
-                                servoDriver.transmitServoPositions( control.joint_state_ );
                 control.publishOdometry( control.gait_vel_ );
                 control.publishTwist( control.gait_vel_ );
 
+                //broadcast over USB2AX 
+                servoDriver.transmitServoPositions( control.joint_state_ );
             }
-            control.setPrevHexActiveState( true );
+
             ROS_INFO("Hexapod is now standing.");
+            control.setPrevHexActiveState( true );
         }
 
         // We are live and standing up
@@ -121,24 +117,17 @@ int main( int argc, char **argv )
 
             // IK solver for legs and body orientation
             ik.calculateIK( control.feet_, control.body_, &control.legs_ );
-
-            // Commit new positions and broadcast over USB2AX as well as jointStates
+                    
+            servoDriver.getServoLoadsIterative( &control.joint_state_, 5);
+            
+            // Commit new positions as well as jointStates
             control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
-            
-            servoDriver.transmitServoPositions( control.joint_state_ );
-            
-            // makes main loop run faster
-            if( load_read_skipped++ >= LOAD_READ_EVERY ){
-                load_read_skipped = 0;
-
-                // read only one servo load per cycle to prevent large lag spikes
-                current_index = (current_index+1)%servoDriver.getServoCount();
-                servoDriver.getServoLoad( &control.joint_state_, current_index);
-            }
-
             control.publishOdometry( control.gait_vel_ );
             control.publishTwist( control.gait_vel_ );
-
+            
+            //broadcast over USB2AX 
+            servoDriver.transmitServoPositions( control.joint_state_ );
+            
             // Set previous hex state of last loop so we know if we are shutting down on the next loop
             control.setPrevHexActiveState( true );
         }
@@ -158,16 +147,17 @@ int main( int argc, char **argv )
                 // IK solver for legs and body orientation
                 ik.calculateIK( control.feet_, control.body_, &control.legs_ );
 
-                // Commit new positions and broadcast over USB2AX as well as jointStates
+                // Commit new positions as well as jointStates
                 control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
-                servoDriver.transmitServoPositions( control.joint_state_ );
                 control.publishOdometry( control.gait_vel_ );
                 control.publishTwist( control.gait_vel_ );
+                
+                //broadcast over USB2AX 
+                servoDriver.transmitServoPositions( control.joint_state_ );
             }
             ROS_INFO("Hexapod is now sitting.");
 
             // Release torque
-            ros::Duration( 0.5 ).sleep();
             servoDriver.freeServos();
 
             // Locomotion is now shut off
@@ -178,6 +168,7 @@ int main( int argc, char **argv )
         if( control.getHexActiveState() == false && control.getPrevHexActiveState() == false )
         {
             ros::Duration( 0.5 ).sleep();
+            // Commit new positions as well as jointStates
             control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
             control.publishOdometry( control.gait_vel_ );
             control.publishTwist( control.gait_vel_ );
