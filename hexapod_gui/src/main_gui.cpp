@@ -24,34 +24,38 @@ MainGui::~MainGui()
     delete ui;
 }
 
+QString trim_number(float value){
+    return QString::number(value, 'f', 2);
+}
+
 void MainGui::updateCallback(const sensor_msgs::JointState::ConstPtr& msg){
     auto joint_state_load = msg->effort;
 
     // right
-    ui->RBCoxaLoad->setNum(joint_state_load[0]);
-    ui->RBFemurLoad->setNum(joint_state_load[1]);
-    ui->RBTibiaLoad->setNum(joint_state_load[2]);
+    ui->RBCoxaLoad->setText(trim_number(joint_state_load[0]));
+    ui->RBFemurLoad->setText(trim_number(joint_state_load[1]));
+    ui->RBTibiaLoad->setText(trim_number(joint_state_load[2]));
 
-    ui->RMCoxaLoad->setNum(joint_state_load[4]);
-    ui->RMFemurLoad->setNum(joint_state_load[5]);
-    ui->RMTibiaLoad->setNum(joint_state_load[6]);
+    ui->RMCoxaLoad->setText(trim_number(joint_state_load[3]));
+    ui->RMFemurLoad->setText(trim_number(joint_state_load[4]));
+    ui->RMTibiaLoad->setText(trim_number(joint_state_load[5]));
 
-    ui->RFCoxaLoad->setNum(joint_state_load[7]);
-    ui->RFFemurLoad->setNum(joint_state_load[8]);
-    ui->RFTibiaLoad->setNum(joint_state_load[9]);
+    ui->RFCoxaLoad->setText(trim_number(joint_state_load[6]));
+    ui->RFFemurLoad->setText(trim_number(joint_state_load[7]));
+    ui->RFTibiaLoad->setText(trim_number(joint_state_load[8]));
 
     //left
-    ui->LBCoxaLoad->setNum(joint_state_load[10]);
-    ui->LBFemurLoad->setNum(joint_state_load[11]);
-    ui->LBTibiaLoad->setNum(joint_state_load[12]);
+    ui->LBCoxaLoad->setText(trim_number(joint_state_load[9]));
+    ui->LBFemurLoad->setText(trim_number(joint_state_load[10]));
+    ui->LBTibiaLoad->setText(trim_number(joint_state_load[11]));
 
-    ui->LMCoxaLoad->setNum(joint_state_load[13]);
-    ui->LMFemurLoad->setNum(joint_state_load[14]);
-    ui->LMTibiaLoad->setNum(joint_state_load[15]);
+    ui->LMCoxaLoad->setText(trim_number(joint_state_load[12]));
+    ui->LMFemurLoad->setText(trim_number(joint_state_load[13]));
+    ui->LMTibiaLoad->setText(trim_number(joint_state_load[14]));
 
-    ui->LFCoxaLoad->setNum(joint_state_load[16]);
-    ui->LFFemurLoad->setNum(joint_state_load[17]);
-    ui->LFTibiaLoad->setNum(joint_state_load[18]);
+    ui->LFCoxaLoad->setText(trim_number(joint_state_load[15]));
+    ui->LFFemurLoad->setText(trim_number(joint_state_load[16]));
+    ui->LFTibiaLoad->setText(trim_number(joint_state_load[17]));
 }
 
 void MainGui::spinOnce(){
