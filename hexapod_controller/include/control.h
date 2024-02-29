@@ -74,6 +74,7 @@ class Control
         hexapod_msgs::LegsJoints legs_;
         hexapod_msgs::FeetPositions feet_;
         double STANDING_BODY_HEIGHT;
+        double SITTING_BODY_HEIGHT;
         geometry_msgs::Twist gait_vel_;
         geometry_msgs::Twist cmd_vel_;
 

@@ -96,6 +96,8 @@ int main( int argc, char **argv )
 
                 //broadcast over USB2AX 
                 servoDriver.transmitServoPositions( control.joint_state_ );
+
+                loopControl.sleep();
             }
 
             ROS_INFO("Hexapod is now standing.");
@@ -134,7 +136,7 @@ int main( int argc, char **argv )
         {
             ROS_INFO("Hexapod sitting down.");
             const geometry_msgs::Twist zero_vel;
-            while( control.body_.position.z > -0.1  && ros::ok() )
+            while( control.body_.position.z > control.SITTING_BODY_HEIGHT  && ros::ok() )
             {
                 control.body_.position.z = control.body_.position.z - 0.001;
 
@@ -151,10 +153,11 @@ int main( int argc, char **argv )
                 
                 //broadcast over USB2AX 
                 servoDriver.transmitServoPositions( control.joint_state_ );
-            }
-            ROS_INFO("Hexapod is now sitting.");
 
-            // Release torque
+                loopControl.sleep();
+            }
+
+            ROS_INFO("Hexapod is now sitting.");
             servoDriver.freeServos();
 
             // Locomotion is now shut off

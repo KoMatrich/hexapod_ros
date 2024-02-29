@@ -47,6 +47,7 @@ Control::Control( void )
     ros::param::get( "HEAD_MAX_YAW", HEAD_MAX_YAW );
     ros::param::get( "HEAD_MAX_PITCH", HEAD_MAX_PITCH );
     ros::param::get( "STANDING_BODY_HEIGHT", STANDING_BODY_HEIGHT );
+    ros::param::get( "SITTING_BODY_HEIGHT", SITTING_BODY_HEIGHT );
     ros::param::get( "SERVOS", SERVOS );
     ros::param::get( "MAX_BODY_ROLL_COMP", MAX_BODY_ROLL_COMP );
     ros::param::get( "MAX_BODY_PITCH_COMP", MAX_BODY_PITCH_COMP );
