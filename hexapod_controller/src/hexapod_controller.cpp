@@ -33,6 +33,7 @@
 #include <gait.h>
 #include <ik.h>
 #include <servo_driver.h>
+#include <loop_control.h>
 
 //=============================================================================
 // Main
@@ -57,11 +58,7 @@ int main( int argc, char **argv )
 
     ros::AsyncSpinner spinner( 2 ); // Using X threads
     spinner.start();
-    ros::Rate loop_rate( control.MASTER_LOOP_RATE );  // Speed limit of loop ( Will go slower than this )
-
-    int cant_keep_up_counter = 0;
-    double cumulative_cycle_time = 0;
-    double peak_cycle_time = 0;
+    LoopControl loopControl( control.MASTER_LOOP_RATE );
 
     ROS_INFO("Hexapod Controller is now running.");
     while( ros::ok() )
@@ -171,42 +168,8 @@ int main( int argc, char **argv )
             control.publishOdometry( control.gait_vel_ );
             control.publishTwist( control.gait_vel_ );
         }
-        
-        bool fast_enough = loop_rate.sleep();
-
-        // Check if loop is fast enought
-        if( fast_enough ){
-            continue;
-        }
-
-        // Handling for case when loop is not fast enough
-
-        double cycle_time = loop_rate.cycleTime().toNSec();
-        cycle_time /= 1000000; // convert nS to mS
-
-        cant_keep_up_counter++;
-        cumulative_cycle_time += cycle_time;
-        if( peak_cycle_time < cycle_time )
-            peak_cycle_time = cycle_time;
-
-
-        if( cant_keep_up_counter >= control.MASTER_LOOP_RATE ){
-
-            double average_cycle_time = cumulative_cycle_time / cant_keep_up_counter;
-            
-            ROS_WARN("Control loop is not running at %d", control.MASTER_LOOP_RATE);
-            ROS_WARN(
-                "Running at %0.1f Hz. Average cycle time: %0.1f ms. Peak cycle time: %0.1f ms.",
-                1000.0 / average_cycle_time, average_cycle_time, peak_cycle_time 
-            );
-
-            cant_keep_up_counter = 0;
-            cumulative_cycle_time = 0;
-            peak_cycle_time = 0;
-        }
-
-        // Prevent feedback loop caused by printing
-        loop_rate.reset();
+    
+        loopControl.sleep();
     }
     ROS_INFO("Hexapod Controller is now shutting down.");
     return 0;

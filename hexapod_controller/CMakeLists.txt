@@ -21,6 +21,8 @@ catkin_package(
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
+add_library( loop_control src/loop_control.cpp )
+
 add_library( control src/control.cpp )
 add_dependencies( control hexapod_msgs_generate_messages_cpp )
 
@@ -35,7 +37,7 @@ target_link_libraries( servo_driver ${catkin_LIBRARIES} )
 add_dependencies( servo_driver hexapod_msgs_generate_messages_cpp )
 
 add_executable( hexapod_controller src/hexapod_controller.cpp )
-target_link_libraries( hexapod_controller ${catkin_LIBRARIES} control gait ik servo_driver )
+target_link_libraries( hexapod_controller ${catkin_LIBRARIES} control gait ik servo_driver loop_control )
 add_dependencies( hexapod_controller hexapod_msgs_generate_messages_cpp )
 
 install(TARGETS hexapod_controller
