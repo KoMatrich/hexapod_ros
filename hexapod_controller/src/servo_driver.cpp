@@ -168,17 +168,63 @@ void ServoDriver::makeSureServosAreOn()
 }
 
 //==============================================================================
-// Updates the positions of the servos and sends USB2AX broadcast packet
+// Updates the positions of the servos and sends USB2AX broadcast packet (without interpolation)
 //==============================================================================
 
 void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_state )
 {
+    angleToRes( joint_state ); // Convert angles to servo resolution
+    makeSureServosAreOn();
+
     dynamixel::GroupSyncWrite groupSyncWrite( portHandler, packetHandler, GOAL_POSITION_L, LEN_GOAL_POSITION );
+    
+    // Prepare packet for broadcast
+    for( int i = 0; i < SERVO_COUNT; i++ )
+    {
+        write_pos_[i] = goal_pos_[i];
+
+        if( cur_pos_[i] == goal_pos_[i] )
+        {
+            continue;
+        }
+
+        // Add param goal position
+        param_goal_position[0] = DXL_LOBYTE(write_pos_[i]);
+        param_goal_position[1] = DXL_HIBYTE(write_pos_[i]);
+        if( !groupSyncWrite.addParam(ID[i], param_goal_position) && portOpenSuccess )
+        {
+            ROS_WARN("Goal position param write failed on [ID:%02d]", ID[i]);
+            writeParamSuccess = false;
+        }
+    }
+
+    // Broadcast packet over U2D2
+    if( writeParamSuccess )
+    {
+        if( groupSyncWrite.txPacket() != COMM_SUCCESS && portOpenSuccess ) ROS_WARN("Position write not successful!");
+    }
+
+    if( writeParamSuccess ){
+        // Store write pose as current pose (goal) since we are now done
+        for( int i = 0; i < SERVO_COUNT; i++ )
+        {
+            cur_pos_[i] = write_pos_[i];
+        }
+    }
+}
+
+
+//==============================================================================
+// Updates the positions of the servos and sends USB2AX broadcast packet (with interpolation)
+//==============================================================================
+void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &joint_state, bool linear_steps)
+{
     angleToRes( joint_state ); // Convert angles to servo resolution
     makeSureServosAreOn();
 
     int interpolating = 0;
-    int complete[SERVO_COUNT];
+
+    int max_step_size = 1;
 
     for( int i = 0; i < SERVO_COUNT; i++ )
     {
@@ -186,79 +232,103 @@ void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_s
         if( cur_pos_[i] != goal_pos_[i] )
         {
             interpolating++;
-            pose_steps_[i] = 1;
+            if( linear_steps ){
+                pose_steps_[i] = std::max(std::abs(cur_pos_[i]-write_pos_[i]), 1);
+            }else{
+                pose_steps_[i] = 1;
+            }
             write_pos_[i] = cur_pos_[i];
-            complete[i] = 0;
         }
         else
         {
             // Nothing is moving on this particular servo
             pose_steps_[i] = 0;
             write_pos_[i] = goal_pos_[i];
-            complete[i] = 1;
+        }
+
+        if( max_step_size < pose_steps_[i] ){
+            max_step_size = pose_steps_[i];
         }
     }
 
-    ros::Rate loop_rate( INTERPOLATION_LOOP_RATE );
     // If nothing moved we abort no need to send packet with same positions
-    if( interpolating != 0 )
-    {
-        while( interpolating != 0  && ros::ok() )
+    if( interpolating == 0 )
+        return;
+    
+    if( linear_steps ){
+        int step_size = std::min(5,max_step_size);
+        
+        for( int i = 0; i < SERVO_COUNT; i++ )
         {
-            // Prepare packet for broadcast
-            for( int i = 0; i < SERVO_COUNT; i++ )
-            {
-                if( pose_steps_[i] == 1 && complete[i] != 1 )
-                {
-                    if( cur_pos_[i] < goal_pos_[i] )
-                    {
-                        write_pos_[i] = write_pos_[i] + pose_steps_[i];
-
-                        if( write_pos_[i] >= goal_pos_[i] )
-                        {
-                            write_pos_[i] = goal_pos_[i];
-                            complete[i] = 1;
-                            interpolating--;
-                        }
-                    }
-
-                    if( cur_pos_[i] > goal_pos_[i] )
-                    {
-                        write_pos_[i] = write_pos_[i] - pose_steps_[i];
-
-                        if( write_pos_[i] <= goal_pos_[i] )
-                        {
-                            write_pos_[i] = goal_pos_[i];
-                            complete[i] = 1;
-                            interpolating--;
-                        }
-                    }
-                }
-                // Complete sync_write packet for broadcast
-                param_goal_position[0] = DXL_LOBYTE(write_pos_[i]);
-                param_goal_position[1] = DXL_HIBYTE(write_pos_[i]);
-                if( !groupSyncWrite.addParam(ID[i], param_goal_position) && portOpenSuccess )
-                {
-                    ROS_WARN("Goal position param write failed on [ID:%02d]", ID[i]);
-                    writeParamSuccess = false;
-                }
-
-            }
-            // Broadcast packet over U2D2
-            if( writeParamSuccess )
-            {
-                if( groupSyncWrite.txPacket() != COMM_SUCCESS && portOpenSuccess ) ROS_WARN("Position write not successful!");
-            }
-            groupSyncWrite.clearParam();
-            loop_rate.sleep();
+            pose_steps_[i] = std::ceil(pose_steps_[i] * step_size / max_step_size);
         }
+    }
+
+    // Interpolation is needed
+    ros::Rate loop_rate( INTERPOLATION_LOOP_RATE );
+    dynamixel::GroupSyncWrite groupSyncWrite( portHandler, packetHandler, GOAL_POSITION_L, LEN_GOAL_POSITION );
+    
+    while( interpolating != 0 && ros::ok() )
+    {
+        // Prepare packet for broadcast
+        for( int i = 0; i < SERVO_COUNT; i++ )
+        {
+            if( pose_steps_[i] == 0 )
+            {
+                continue;
+            }
+
+            if( cur_pos_[i] < goal_pos_[i] )
+            {
+                write_pos_[i] = write_pos_[i] + pose_steps_[i];
+
+                if( write_pos_[i] >= goal_pos_[i] )
+                {
+                    write_pos_[i] = goal_pos_[i];
+                    pose_steps_[i] = 0;
+                    interpolating--;
+                }
+            }
+            
+            if( cur_pos_[i] > goal_pos_[i] )
+            {
+                write_pos_[i] = write_pos_[i] - pose_steps_[i];
+
+                if( write_pos_[i] <= goal_pos_[i] )
+                {
+                    write_pos_[i] = goal_pos_[i];
+                    pose_steps_[i] = 0;
+                    interpolating--;
+                }
+            }
+
+            // Add param goal position
+            param_goal_position[0] = DXL_LOBYTE(write_pos_[i]);
+            param_goal_position[1] = DXL_HIBYTE(write_pos_[i]);
+            if( !groupSyncWrite.addParam(ID[i], param_goal_position) && portOpenSuccess )
+            {
+                ROS_WARN("Goal position param write failed on [ID:%02d]", ID[i]);
+                writeParamSuccess = false;
+            }
+        }
+
+        // Broadcast packet over U2D2
+        if( writeParamSuccess )
+        {
+            if( groupSyncWrite.txPacket() != COMM_SUCCESS && portOpenSuccess ) ROS_WARN("Position write not successful!");
+        }
+        groupSyncWrite.clearParam();
+
+        loop_rate.sleep();
+    }
+
+    if( writeParamSuccess ){
         // Store write pose as current pose (goal) since we are now done
         for( int i = 0; i < SERVO_COUNT; i++ )
         {
             cur_pos_[i] = write_pos_[i];
         }
     }
-    loop_rate.sleep();
 }
 
 //==============================================================================

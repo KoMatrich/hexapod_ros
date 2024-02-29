@@ -95,7 +95,7 @@ int main( int argc, char **argv )
                 control.publishTwist( control.gait_vel_ );
 
                 //broadcast over USB2AX 
-                servoDriver.transmitServoPositions( control.joint_state_ );
+                servoDriver.transmitServoPositionsInter( control.joint_state_ );
 
                 loopControl.sleep();
             }
@@ -117,7 +117,7 @@ int main( int argc, char **argv )
             // IK solver for legs and body orientation
             ik.calculateIK( control.feet_, control.body_, &control.legs_ );
                     
-            //servoDriver.getServoLoadsIterative( &control.joint_state_, 0);
+            servoDriver.getServoLoadsIterative( &control.joint_state_, 0);
             
             // Commit new positions as well as jointStates
             control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
@@ -125,7 +125,7 @@ int main( int argc, char **argv )
             control.publishTwist( control.gait_vel_ );
             
             //broadcast over USB2AX 
-            servoDriver.transmitServoPositions( control.joint_state_ );
+            servoDriver.transmitServoPositionsInter( control.joint_state_ );
             
             // Set previous hex state of last loop so we know if we are shutting down on the next loop
             control.setPrevHexActiveState( true );
@@ -152,7 +152,7 @@ int main( int argc, char **argv )
                 control.publishTwist( control.gait_vel_ );
                 
                 //broadcast over USB2AX 
-                servoDriver.transmitServoPositions( control.joint_state_ );
+                servoDriver.transmitServoPositionsInter( control.joint_state_ );
 
                 loopControl.sleep();
             }

@@ -54,6 +54,7 @@ class ServoDriver
         ~ServoDriver( void );
 
         void transmitServoPositions( const sensor_msgs::JointState &joint_state );
+        void transmitServoPositionsInter( const sensor_msgs::JointState &joint_state, bool linear_steps = true);
 
         void getServoLoadsIterative( sensor_msgs::JointState *joint_state, const int LOAD_READ_EVERY);
         void getServoLoads( sensor_msgs::JointState *joint_state );

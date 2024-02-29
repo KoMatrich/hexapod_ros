@@ -6,7 +6,7 @@ NON_TELEOP: false
 
 # Speed limit in Hz for the master loop rate
 # (waiting for commands, etc)
-MASTER_LOOP_RATE: 500
+MASTER_LOOP_RATE: 100
 
 # Speed in Hz that the servos interpolate between gait poses
 # (walking, turning, etc)
