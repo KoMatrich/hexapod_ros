@@ -31,11 +31,12 @@
 
 class LoopControl{
     public:
-        LoopControl( uint rate);
+        LoopControl( uint rate, const std::string name );
         bool sleep();
 
     private:
         const uint RATE;
+        const std::string NAME;
         
         ros::Rate loop_rate;
 

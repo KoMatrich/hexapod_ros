@@ -29,7 +29,9 @@
 
 #include <loop_control.h>
 
-LoopControl::LoopControl(uint rate) : RATE(rate), loop_rate(rate){
+LoopControl::LoopControl(uint rate, const std::string name):
+    RATE(rate), NAME(name), loop_rate(rate)
+{
     cant_keep_up_counter = 0;
     cumulative_cycle_time = 0;
     peak_cycle_time = 0;
@@ -58,7 +60,7 @@ bool LoopControl::sleep(){
 
         double average_cycle_time = cumulative_cycle_time / cant_keep_up_counter;
         
-        ROS_WARN("Control loop is not running at %d", RATE);
+        ROS_WARN("%s is not running at %d Hz", NAME.c_str(), RATE);
         ROS_WARN(
             "Running at %0.1f Hz. Average cycle time: %0.1f ms. Peak cycle time: %0.1f ms.",
             1000.0 / average_cycle_time, average_cycle_time, peak_cycle_time 

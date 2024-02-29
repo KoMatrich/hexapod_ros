@@ -58,7 +58,8 @@ int main( int argc, char **argv )
 
     ros::AsyncSpinner spinner( 2 ); // Using X threads
     spinner.start();
-    LoopControl loopControl( control.MASTER_LOOP_RATE );
+
+    LoopControl loopControl( control.MASTER_LOOP_RATE, "Controller");
 
     ROS_INFO("Hexapod Controller is now running.");
     while( ros::ok() )
