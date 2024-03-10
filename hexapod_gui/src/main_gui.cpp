@@ -29,6 +29,12 @@ QString trim_number(float value){
 }
 
 void MainGui::updateCallback(const sensor_msgs::JointState::ConstPtr& msg){
+    auto msg_time = QString::number(msg->header.stamp.nsec*1.0/(10^9),'f',2) + "s";
+    auto frame_id = msg->header.frame_id;
+
+    ui->RosTime->setText("Time: "+msg_time);
+    ui->RosFrameId->setText("Frame Id: "+frame_id);
+
     auto joint_state_load = msg->effort;
 
     // right
