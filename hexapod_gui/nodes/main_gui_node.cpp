@@ -7,14 +7,14 @@ int main(int argc, char *argv[])
     ros::init(argc, argv, "main_gui", ros::init_options::AnonymousName);
     QApplication a(argc, argv);
 
-    MainGui w;
+    MainGui main_window;
 
-    w.setWindowTitle(QString::fromStdString(
+    main_window.setWindowTitle(QString::fromStdString(
         "Qt UI"));
 
     QIcon icon(":/icons/my_gui_icon.png");
-    w.setWindowIcon(icon);
+    main_window.setWindowIcon(icon);
 
-    w.show();
+    main_window.show();
     return a.exec();
 }

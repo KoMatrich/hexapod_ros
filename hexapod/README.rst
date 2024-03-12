@@ -13,3 +13,4 @@ Gait style is a simple sinusoidal tripod gait. I chose it due to its simplicity 
 * Contributor: Konstantinos Chatzilygeroudis
 * Contributor: Kurt Eckhardt
 * Contributor: Romain Reignier
+* Contributor: Martin Kocich
