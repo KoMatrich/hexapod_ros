@@ -10,15 +10,31 @@ MainGui::MainGui(QWidget *parent)
 
     node_handler_.reset(new ros::NodeHandle("~"));
 
+    std::string joint_states_topic;
+    std::string joy_topic;
+    std::string next_gait_topic;
+
+    int rate;
+
+    node_handler_->param<std::string>("JOINT_STATES_TOPIC", joint_states_topic, "/joint_states");
+    node_handler_->param<std::string>("JOY_TOPIC", joy_topic, "/joy_topic");
+    node_handler_->param<std::string>("NEXT_GAIT_TOPIC", next_gait_topic, "/next_gait_topic");
+
+    node_handler_->param<int>("RATE", rate, 10);
+
+    // subscribers
+    joint_state_sub_ = node_handler_->subscribe<sensor_msgs::JointState>(joint_states_topic, 5, &MainGui::updateCallback, this);
+
+    // publishers
+    state_joy_pub_ = node_handler_->advertise<sensor_msgs::Joy>(joy_topic, rate);
+    next_gait_pub_ = node_handler_->advertise<std_msgs::String>(next_gait_topic, rate);
+
+    joyState_.axes.resize(2);
+    joyState_.buttons.resize(4);
+
     ros_timer_ = new QTimer(this);
     connect(ros_timer_, SIGNAL(timeout()), this, SLOT(spinOnce()));
-    ros_timer_->start(10);
-
-    std::string joint_states_topic;
-    node_handler_->param<std::string>("JOINT_STATES_TOPIC", joint_states_topic, "/joint_states");
-    joint_state_sub_ = node_handler_->subscribe<sensor_msgs::JointState>(joint_states_topic, 1, &MainGui::updateCallback, this);
-
-    state_joy_pub_ = node_handler_->advertise<sensor_msgs::Joy>("joy", 5);
+    ros_timer_->start(rate);
 }
 
 MainGui::~MainGui()
@@ -31,7 +47,7 @@ QString trim_number(float value){
 }
 
 void MainGui::updateCallback(const sensor_msgs::JointState::ConstPtr& msg){
-    auto msg_time = QString::number(msg->header.stamp.nsec*1.0/(10^9),'f',2) + "s";
+    auto msg_time = QString::number((double)(msg->header.stamp.nsec/(10^6))/(10^3),'f',2) + "s";
     auto frame_id = QString::fromStdString(msg->header.frame_id);
 
     ui_->RosTime->setText("Time: "+msg_time);
@@ -75,20 +91,32 @@ void MainGui::publishStates(){
     joyState_.axes[1] += 0 ? 1 : ui_->LPushButtonRight->isDown();
     joyState_.axes[1] -= 0 ? 1 : ui_->LPushButtonLeft->isDown();
 
-    joyState_.buttons[1] = 0 ? 1 : ui_->RPushButtonA->isDown();
-    joyState_.buttons[2] = 0 ? 1 : ui_->RPushButtonA->isDown();
-    joyState_.buttons[3] = 0 ? 1 : ui_->RPushButtonA->isDown();
-    joyState_.buttons[4] = 0 ? 1 : ui_->RPushButtonA->isDown();
+    joyState_.buttons[0] = 0 ? 1 : ui_->RPushButtonA->isDown();
+    joyState_.buttons[1] = 0 ? 1 : ui_->RPushButtonB->isDown();
+    joyState_.buttons[2] = 0 ? 1 : ui_->RPushButtonX->isDown();
+    joyState_.buttons[3] = 0 ? 1 : ui_->RPushButtonY->isDown();
 
     state_joy_pub_.publish(joyState_);
+
+    next_gait_.data = "";
+
+    if(ui_->TripodGaitButton->isDown())
+        next_gait_.data = "Tripod";
+    if(ui_->TetrapodGaitButton->isDown())
+        next_gait_.data = "Tetrapod";
+    if(ui_->RippleGaitButton->isDown())
+        next_gait_.data = "Ripple";
+    if(ui_->WaveGaitButton->isDown())
+        next_gait_.data = "Wave";
+
+    next_gait_pub_.publish(next_gait_);
 }
 
 void MainGui::spinOnce(){
-    ros::Rate rate(5);
-    while(ros::ok()){
+    if(ros::ok()){
         publishStates();
-
-        rate.sleep();
+        ros::spinOnce();
+    }else{
+        QApplication::quit();
     }
-    QApplication::quit();
 }

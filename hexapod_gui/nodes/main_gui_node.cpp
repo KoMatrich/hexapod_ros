@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "main_gui", ros::init_options::AnonymousName);
+    ros::init(argc, argv, "main_gui");
     QApplication a(argc, argv);
 
     MainGui main_window;

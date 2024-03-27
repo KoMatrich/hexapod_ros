@@ -21,6 +21,9 @@
        <property name="text">
         <string>Tripod</string>
        </property>
+       <property name="shortcut">
+        <string>1</string>
+       </property>
       </widget>
      </item>
      <item row="2" column="0">
@@ -28,12 +31,18 @@
        <property name="text">
         <string>Wave</string>
        </property>
+       <property name="shortcut">
+        <string>3</string>
+       </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="TetrapodGaitButton">
        <property name="text">
         <string>Tetrapod</string>
+       </property>
+       <property name="shortcut">
+        <string>2</string>
        </property>
       </widget>
      </item>
