@@ -4,6 +4,9 @@
 #include <QWidget>
 #include <ros/ros.h>
 #include <qtimer.h>
+#include <std_msgs/String.h>
+#include <sensor_msgs/JointState.h>
+#include <sensor_msgs/Joy.h>
 
 namespace Ui {
 class MainGui;
@@ -21,9 +24,22 @@ public slots:
     void spinOnce();
 
 private:
-    Ui::MainGui *ui;
+    Ui::MainGui *ui_;
 
-    QTimer *ros_timer;
+    QTimer *ros_timer_;
+
+    ros::NodeHandlePtr node_handler_;
+
+    ros::Subscriber joint_state_sub_;
+
+    ros::Publisher state_joy_pub_;
+    ros::Publisher next_gait_pub_;
+
+    sensor_msgs::Joy joyState_;
+    std_msgs::String next_gait_;
+
+    void updateCallback(const sensor_msgs::JointState::ConstPtr& msg);
+    void publishStates();
 };
 
 #endif // MAIN_GUI_H
