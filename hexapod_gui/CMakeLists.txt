@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
+
+# Set policy CMP0048 to OLD to ignore project versioning
+if( POLICY CMP0048 )
+  cmake_policy( SET CMP0048 OLD )
+endif()
+
 project(hexapod_gui)
 
 ################################
@@ -77,7 +83,7 @@ file(GLOB HDRS
   "include/*.h"
 )
 file(GLOB SRCS
-  "src/*.cpp";
+  "src/*.cpp"
   "src/*.hpp"
 )
 file(GLOB NODES

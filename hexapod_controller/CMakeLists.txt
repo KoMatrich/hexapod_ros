@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
+
+# Set policy CMP0048 to OLD to ignore project versioning
+if( POLICY CMP0048 )
+  cmake_policy( SET CMP0048 OLD )
+endif()
+
 project( hexapod_controller )
 
 find_package( catkin REQUIRED COMPONENTS nodelet roscpp geometry_msgs sensor_msgs std_msgs hexapod_msgs tf dynamixel_sdk)
