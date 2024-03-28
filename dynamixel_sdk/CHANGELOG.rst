@@ -2,12 +2,57 @@
 Changelog for package dynamixel_sdk
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.7.51 (2021-04-14)
+-------------------
+* Add Sync / Bulk read write ROS examples
+* Contributors: JaehyunShim
+
+3.7.41 (2020-08-12)
+-------------------
+* DYNAMIXEL SDK ROS example initial commit.
+* Bug fix for 4.5Mbps support (#430)
+* Contributors: Zerom, Will Son
+
+3.7.31 (2020-07-13)
+-------------------
+* ROS 1 Noetic Ninjemys support
+* 3x faster getError member function of GroupSyncRead Class
+* Contributors: developer0hye, Zerom, Will Son
+
+3.7.21 (2019-09-06)
+-------------------
+* Fixed buffer overflow bug (rxpacket size)
+* Fixed typo in the package.xml and header files
+* Contributors: Chris Lalancette, Zerom, Pyo
+
+3.7.11 (2019-08-19)
+-------------------
+- Updated C lib and DLL file
+- Changed C# / win32 / protocol_combined output path
+- Fixed "protocol_combined" example bug
+- Fixed typo in bulk_read_write.py
+* Contributors: Pyo, Zerom
+
+3.7.10 (2019-08-19)
+-------------------
+* Supported ROS 2 Dashing Diademata
+* Contributors: Darby, Pyo
+
+3.7.0 (2019-01-03)
+------------------
+* Added clear instruction `#269 <https://github.com/ROBOTIS-GIT/DynamixelSDK/issues/269>`_
+* Removed busy waiting for rxPacket()
+* Fixed addStuffing() function (reduced stack memory usage)
+* Fixed memory issues `#268 <https://github.com/ROBOTIS-GIT/DynamixelSDK/issues/268>`_
+* Fixed the broadcast ping bug in dxl_monitor
+* Contributors: Gilbert, Pyo, Zerom
+
 3.6.2 (2018-07-17)
 ------------------
-* added python modules for ROS to ros folder
-* moved cpp library files for ROS to ros folder 
-* created an ROS package separately `#187 <https://github.com/ROBOTIS-GIT/DynamixelSDK/issues/187>`_
-* modified the e-Manual address to emanual.robotis.com
+* Added python modules for ROS to ros folder
+* Moved cpp library files for ROS to ros folder
+* Created an ROS package separately `#187 <https://github.com/ROBOTIS-GIT/DynamixelSDK/issues/187>`_
+* Modified the e-Manual address to emanual.robotis.com
 * Contributors: Pyo
 
 3.6.1 (2018-06-14)

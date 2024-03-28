@@ -179,6 +179,15 @@ class WINDECLSPEC Protocol1PacketHandler : public PacketHandler
   int reboot          (PortHandler *port, uint8_t id, uint8_t *error = 0);
 
   ////////////////////////////////////////////////////////////////////////////////
+  /// @brief (Available only in Protocol 2.0) The function that reset multi-turn revolution information of Dynamixel
+  /// @param port PortHandler instance
+  /// @param id Dynamixel ID
+  /// @param error Dynamixel hardware error
+  /// @return COMM_NOT_AVAILABLE
+  ////////////////////////////////////////////////////////////////////////////////
+  int clearMultiTurn  (PortHandler *port, uint8_t id, uint8_t *error = 0);
+
+  ////////////////////////////////////////////////////////////////////////////////
   /// @brief The function that makes Dynamixel reset as it was produced in the factory
   /// @description The function makes an instruction packet with INST_FACTORY_RESET,
   /// @description transmits the packet with Protocol1PacketHandler::txRxPacket().
@@ -447,7 +456,7 @@ class WINDECLSPEC Protocol1PacketHandler : public PacketHandler
   /// @brief The function that transmits INST_REG_WRITE instruction packet with the data for writing on the Dynamixel register
   /// @description The function makes an instruction packet with INST_REG_WRITE and the data for writing on the Dynamixel register,
   /// @description transmits the packet with Protocol1PacketHandler::txPacket().
-  /// @description The data written in the register will act when INST_ACTION instruction packet is transmitted to the Dynamxel.
+  /// @description The data written in the register will act when INST_ACTION instruction packet is transmitted to the Dynamixel.
   /// @param port PortHandler instance
   /// @param id Dynamixel ID
   /// @param address Address of the data for write
@@ -462,7 +471,7 @@ class WINDECLSPEC Protocol1PacketHandler : public PacketHandler
   /// @description The function makes an instruction packet with INST_REG_WRITE and the data for writing on the Dynamixel register,
   /// @description transmits and receives the packet with Protocol1PacketHandler::txRxPacket(),
   /// @description gets the error from the packet.
-  /// @description The data written in the register will act when INST_ACTION instruction packet is transmitted to the Dynamxel.
+  /// @description The data written in the register will act when INST_ACTION instruction packet is transmitted to the Dynamixel.
   /// @param port PortHandler instance
   /// @param id Dynamixel ID
   /// @param address Address of the data for write

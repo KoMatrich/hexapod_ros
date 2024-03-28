@@ -365,6 +365,11 @@ int Protocol1PacketHandler::reboot(PortHandler *port, uint8_t id, uint8_t *error
   return COMM_NOT_AVAILABLE;
 }
 
+int Protocol1PacketHandler::clearMultiTurn(PortHandler *port, uint8_t id, uint8_t *error)
+{
+  return COMM_NOT_AVAILABLE;
+}
+
 int Protocol1PacketHandler::factoryReset(PortHandler *port, uint8_t id, uint8_t option, uint8_t *error)
 {
   uint8_t txpacket[6]         = {0};
@@ -407,6 +412,9 @@ int Protocol1PacketHandler::readRx(PortHandler *port, uint8_t id, uint16_t lengt
   uint8_t *rxpacket           = (uint8_t *)malloc(RXPACKET_MAX_LEN); //(length+6);
   //uint8_t *rxpacket         = new uint8_t[length+6];
 
+  if (rxpacket == NULL)
+    return result;
+
   do {
     result = rxPacket(port, rxpacket);
   } while (result == COMM_SUCCESS && rxpacket[PKT_ID] != id);
@@ -436,8 +444,14 @@ int Protocol1PacketHandler::readTxRx(PortHandler *port, uint8_t id, uint16_t add
   uint8_t txpacket[8]         = {0};
   uint8_t *rxpacket           = (uint8_t *)malloc(RXPACKET_MAX_LEN);//(length+6);
 
+  if (rxpacket == NULL)
+    return result;
+
   if (id >= BROADCAST_ID)
+  {
+    free(rxpacket);
     return COMM_NOT_AVAILABLE;
+  }
 
   txpacket[PKT_ID]            = id;
   txpacket[PKT_LENGTH]        = 4;
@@ -534,6 +548,9 @@ int Protocol1PacketHandler::writeTxOnly(PortHandler *port, uint8_t id, uint16_t 
   uint8_t *txpacket           = (uint8_t *)malloc(length+7);
   //uint8_t *txpacket           = new uint8_t[length+7];
 
+  if (txpacket == NULL)
+    return result;
+
   txpacket[PKT_ID]            = id;
   txpacket[PKT_LENGTH]        = length+3;
   txpacket[PKT_INSTRUCTION]   = INST_WRITE;
@@ -558,6 +575,9 @@ int Protocol1PacketHandler::writeTxRx(PortHandler *port, uint8_t id, uint16_t ad
   uint8_t *txpacket           = (uint8_t *)malloc(length+7); //#6->7
   //uint8_t *txpacket           = new uint8_t[length+7];
   uint8_t rxpacket[6]         = {0};
+
+  if (txpacket == NULL)
+    return result;
 
   txpacket[PKT_ID]            = id;
   txpacket[PKT_LENGTH]        = length+3;
@@ -615,6 +635,9 @@ int Protocol1PacketHandler::regWriteTxOnly(PortHandler *port, uint8_t id, uint16
   uint8_t *txpacket           = (uint8_t *)malloc(length+6);
   //uint8_t *txpacket           = new uint8_t[length+6];
 
+  if (txpacket == NULL)
+    return result;
+
   txpacket[PKT_ID]            = id;
   txpacket[PKT_LENGTH]        = length+3;
   txpacket[PKT_INSTRUCTION]   = INST_REG_WRITE;
@@ -639,6 +662,9 @@ int Protocol1PacketHandler::regWriteTxRx(PortHandler *port, uint8_t id, uint16_t
   uint8_t *txpacket           = (uint8_t *)malloc(length+6);
   //uint8_t *txpacket           = new uint8_t[length+6];
   uint8_t rxpacket[6]         = {0};
+
+  if (txpacket == NULL)
+    return result;
 
   txpacket[PKT_ID]            = id;
   txpacket[PKT_LENGTH]        = length+3;
@@ -669,6 +695,9 @@ int Protocol1PacketHandler::syncWriteTxOnly(PortHandler *port, uint16_t start_ad
   // 8: HEADER0 HEADER1 ID LEN INST START_ADDR DATA_LEN ... CHKSUM
   //uint8_t *txpacket           = new uint8_t[param_length + 8];
 
+  if (txpacket == NULL)
+    return result;
+
   txpacket[PKT_ID]            = BROADCAST_ID;
   txpacket[PKT_LENGTH]        = param_length + 4; // 4: INST START_ADDR DATA_LEN ... CHKSUM
   txpacket[PKT_INSTRUCTION]   = INST_SYNC_WRITE;
@@ -693,6 +722,9 @@ int Protocol1PacketHandler::bulkReadTx(PortHandler *port, uint8_t *param, uint16
   uint8_t *txpacket           = (uint8_t *)malloc(param_length+7);
   // 7: HEADER0 HEADER1 ID LEN INST 0x00 ... CHKSUM
   //uint8_t *txpacket           = new uint8_t[param_length + 7];
+
+  if (txpacket == NULL)
+    return result;
 
   txpacket[PKT_ID]            = BROADCAST_ID;
   txpacket[PKT_LENGTH]        = param_length + 3; // 3: INST 0x00 ... CHKSUM
