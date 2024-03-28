@@ -36,13 +36,11 @@
 #include <sensor_msgs/JointState.h>
 
 // Default setting
-#define BAUDRATE    1000000
-#define DEVICENAME  "/dev/ttyUSB0"      // Check which port is being used on your controller
-#define PROTOCOL_VERSION   1.0          // See which protocol version is used in the Dynamixel
-#define TORQUE_ON   1
-#define TORQUE_OFF  0
-#define LEN_GOAL_POSITION  2
-#define LEN_PRESENT_LOAD   2
+constexpr auto PROTOCOL_VERSION  = 1.0;          // See which protocol version is used in the Dynamixel
+constexpr auto TORQUE_ON         = 1;
+constexpr auto TORQUE_OFF        = 0;
+constexpr auto LEN_GOAL_POSITION = 2;
+constexpr auto LEN_PRESENT_LOAD  = 2;
 //==============================================================================
 // Define the class(s) for Servo Drivers.
 //==============================================================================
@@ -50,7 +48,7 @@
 class ServoDriver
 {
     public:
-        ServoDriver( void );
+        ServoDriver( const char* devicename, uint baudrate=1000000, uint driver_id=0);
         ~ServoDriver( void );
 
         void transmitServoPositions( const sensor_msgs::JointState &joint_state );
@@ -66,9 +64,11 @@ class ServoDriver
         void lockServos( void );
 
         int getServoCount(){return SERVO_COUNT;};
+
+        const int DRIVER_ID;
     private:
-        dynamixel::PortHandler *portHandler = dynamixel::PortHandler::getPortHandler(DEVICENAME); // Initialize PacketHandler instance
-        dynamixel::PacketHandler *packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION); // Set the protocol version
+        dynamixel::PortHandler *portHandler;
+        dynamixel::PacketHandler *packetHandler;
         
         uint8_t dxl_error = 0;                          // Dynamixel error
         uint16_t dxl_present_position = 0;              // Present position
@@ -94,7 +94,9 @@ class ServoDriver
         
         XmlRpc::XmlRpcValue SERVOS; // Servo map from yaml config file
         std::vector<int> servo_orientation_; // If the servo is physically mounted backwards this sign is flipped
-        std::vector<std::string> servo_map_key_;
+        
+        std::vector<std::string> servo_map_key_; // Servo map key
+        std::vector<int> servo_to_joint_index_; // Converts servo index to joint index
 
         bool portOpenSuccess = false;
         bool torque_on = true;

@@ -34,16 +34,18 @@
 // If servos are not on, no worries we read them later just to be safe
 //==============================================================================
 
-ServoDriver::ServoDriver( void )
-{
+ServoDriver::ServoDriver( const char* deviceName, uint baudrate, uint driver_id): DRIVER_ID(driver_id) {
+    portHandler = dynamixel::PortHandler::getPortHandler(deviceName);
+    packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION);
+
     // Open port
     if ( portHandler->openPort() )
     {
         ROS_INFO("Succeeded to open the port!");
         auto currentBaudRate = portHandler->getBaudRate();
-        auto targetBaudRate = BAUDRATE;
+        auto targetBaudRate = baudrate;
         // Set port baudrate
-        if ( portHandler->setBaudRate(BAUDRATE) ) 
+        if ( portHandler->setBaudRate(baudrate) ) 
             ROS_INFO("Succeeded to change the baudrate! (%d) to (%d)", currentBaudRate, targetBaudRate);
         else
             ROS_WARN("Failed to change the baudrate! (%d) to (%d)", currentBaudRate, targetBaudRate);
@@ -64,12 +66,20 @@ ServoDriver::ServoDriver( void )
     ros::param::get( "SERVOS", SERVOS );
     ros::param::get( "INTERPOLATION_LOOP_RATE", INTERPOLATION_LOOP_RATE );
 
+    int index = 0;
     for( XmlRpc::XmlRpcValue::iterator it = SERVOS.begin(); it != SERVOS.end(); it++ )
     {
-        servo_map_key_.push_back( it->first );
+        int servo_driver_id = 0;
+        ros::param::get( "SERVOS/" + static_cast<std::string>( it->first ) + "/driver_id", servo_driver_id );
+        if( servo_driver_id == DRIVER_ID){
+            servo_map_key_.push_back( it->first );
+            servo_to_joint_index_.push_back( index );
+        }
+        index++;
     }
 
     SERVO_COUNT = servo_map_key_.size();
+
     OFFSET.resize( SERVO_COUNT );
     ID.resize( SERVO_COUNT );
     TICKS.resize( SERVO_COUNT );
@@ -120,7 +130,8 @@ void ServoDriver::angleToRes( const sensor_msgs::JointState &joint_state )
 {
     for( int i = 0; i < SERVO_COUNT; i++ )
     {
-        goal_pos_[i] = CENTER[i] + round( ( joint_state.position[i] - ( servo_orientation_[i] * OFFSET[i] ) ) * RAD_TO_SERVO_RESOLUTION[i] );
+        int msg_i = servo_to_joint_index_[i];
+        goal_pos_[i] = CENTER[i] + round( ( joint_state.position[msg_i] - ( servo_orientation_[i] * OFFSET[i] ) ) * RAD_TO_SERVO_RESOLUTION[i] );
     }
 }
 
@@ -132,7 +143,8 @@ void ServoDriver::resToAngle( sensor_msgs::JointState &joint_state )
 {
     for( int i = 0; i < SERVO_COUNT; i++ )
     {
-        joint_state.position[i] = ( cur_pos_[i] - CENTER[i] ) / RAD_TO_SERVO_RESOLUTION[i] + ( servo_orientation_[i] * OFFSET[i] );
+        int msg_i = servo_to_joint_index_[i];
+        joint_state.position[msg_i] = ( cur_pos_[i] - CENTER[i] ) / RAD_TO_SERVO_RESOLUTION[i] + ( servo_orientation_[i] * OFFSET[i] );
     }
 }
 
@@ -362,7 +374,7 @@ float convertLoad(uint32_t data) {
 void ServoDriver::getServoLoadsIterative( sensor_msgs::JointState *joint_state, const int LOAD_READ_EVERY)
 {   
     static int load_read_skipped = 0; //number of cycles skipped
-    static int current_index = 0; //index of servo to read load from this cycle
+    static uint current_index = 0; //index of servo to read load from this cycle
     
     joint_state->header.stamp = ros::Time::now();
 
@@ -384,7 +396,7 @@ void ServoDriver::getServoLoads( sensor_msgs::JointState *joint_state )
 {   
     joint_state->header.stamp = ros::Time::now();
     
-    for( int i = 0; i < SERVO_COUNT; i++ )
+    for(int i = 0; i < SERVO_COUNT; i++ )
     {
         getServoLoad( joint_state, i);
     }
@@ -402,7 +414,8 @@ void ServoDriver::getServoLoad( sensor_msgs::JointState *joint_state, uint index
     {
         cur_load_[index] = servo_orientation_[index] * convertLoad(currentLoad);
 
-        joint_state->effort[index] = (cur_load_[index] + joint_state->effort[index])/2; // Remove noise from load data by averaging
+        int msg_i = servo_to_joint_index_[index];
+        joint_state->effort[msg_i] = (cur_load_[index] + joint_state->effort[msg_i])/2; // Remove noise from load data by averaging
     }
     else
     {
