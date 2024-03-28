@@ -36,8 +36,11 @@ add_library( servo_driver src/servo_driver.cpp )
 target_link_libraries( servo_driver ${catkin_LIBRARIES} )
 add_dependencies( servo_driver hexapod_msgs_generate_messages_cpp )
 
+add_library( parallel_executor src/parallel_executor.cpp )
+add_dependencies( parallel_executor servo_driver )
+
 add_executable( hexapod_controller src/hexapod_controller.cpp )
-target_link_libraries( hexapod_controller ${catkin_LIBRARIES} control gait ik servo_driver loop_control )
+target_link_libraries( hexapod_controller ${catkin_LIBRARIES} control gait ik parallel_executor servo_driver loop_control )
 add_dependencies( hexapod_controller hexapod_msgs_generate_messages_cpp )
 
 install(TARGETS hexapod_controller

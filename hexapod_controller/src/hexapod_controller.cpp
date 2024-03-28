@@ -33,6 +33,7 @@
 #include <gait.h>
 #include <ik.h>
 #include <servo_driver.h>
+#include <parallel_executor.h>
 #include <loop_control.h>
 
 //=============================================================================
@@ -47,7 +48,29 @@ int main( int argc, char **argv )
     Control control;
     Gait gait;
     Ik ik;
-    ServoDriver servoDriver;
+
+    ParallelExecutor<ServoDriver> parallel_executor;
+    std::vector<ServoDriver> servo_drivers;
+
+    XmlRpc::XmlRpcValue SERVOS_DRIVERS;
+    ros::param::get( "SERVOS_DRIVERS", SERVOS_DRIVERS );
+    for( XmlRpc::XmlRpcValue::iterator it = SERVOS_DRIVERS.begin(); it != SERVOS_DRIVERS.end(); it++ )
+    {
+        std::string port;
+        int baudrate;
+
+        ros::param::get( "/SERVOS_DRIVERS/" + it->first + "port", port);
+        ros::param::get( "/SERVOS_DRIVERS/" + it->first + "baudrate", baudrate);
+
+        ServoDriver servo_driver("/dev/ttyUSB0", baudrate, atoi(it->first.c_str()));
+        servo_drivers.push_back(servo_driver);
+    }
+
+    if( servo_drivers.size() == 0 )
+    {
+        ROS_ERROR("No servo drivers found. Exiting.");
+        ros::shutdown();
+    }
 
     // Establish initial leg positions for default pose in robot publisher
     gait.gaitCycle( control.cmd_vel_, &control.feet_, &control.gait_vel_ );
@@ -80,7 +103,7 @@ int main( int argc, char **argv )
         if( control.getHexActiveState() == true && control.getPrevHexActiveState() == false )
         {
             ROS_INFO("Hexapod standing up.");
-            servoDriver.lockServos();
+            parallel_executor.run(servo_drivers, &ServoDriver::lockServos);
 
             while( control.body_.position.z < control.STANDING_BODY_HEIGHT && ros::ok() )
             {
@@ -95,7 +118,7 @@ int main( int argc, char **argv )
                 control.publishTwist( control.gait_vel_ );
 
                 //broadcast over USB2AX 
-                servoDriver.transmitServoPositionsInter( control.joint_state_ );
+                parallel_executor.run(servo_drivers, &ServoDriver::transmitServoPositionsInter, control.joint_state_, true);
 
                 loopControl.sleep();
             }
@@ -117,7 +140,7 @@ int main( int argc, char **argv )
             // IK solver for legs and body orientation
             ik.calculateIK( control.feet_, control.body_, &control.legs_ );
                     
-            servoDriver.getServoLoadsIterative( &control.joint_state_, 0);
+            parallel_executor.run(servo_drivers, &ServoDriver::getServoLoadsIterative, &control.joint_state_, 0);
             
             // Commit new positions as well as jointStates
             control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
@@ -125,7 +148,7 @@ int main( int argc, char **argv )
             control.publishTwist( control.gait_vel_ );
             
             //broadcast over USB2AX 
-            servoDriver.transmitServoPositionsInter( control.joint_state_ );
+            parallel_executor.run(servo_drivers, &ServoDriver::transmitServoPositionsInter, control.joint_state_, true);
             
             // Set previous hex state of last loop so we know if we are shutting down on the next loop
             control.setPrevHexActiveState( true );
@@ -152,13 +175,13 @@ int main( int argc, char **argv )
                 control.publishTwist( control.gait_vel_ );
                 
                 //broadcast over USB2AX 
-                servoDriver.transmitServoPositionsInter( control.joint_state_ );
+                parallel_executor.run(servo_drivers, &ServoDriver::transmitServoPositionsInter, control.joint_state_, true);
 
                 loopControl.sleep();
             }
 
             ROS_INFO("Hexapod is now sitting.");
-            servoDriver.freeServos();
+            parallel_executor.run(servo_drivers, &ServoDriver::freeServos);
 
             // Locomotion is now shut off
             control.setPrevHexActiveState( false );
