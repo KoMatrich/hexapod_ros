@@ -93,12 +93,7 @@ SERVOS_DRIVERS:
       {
         port: /dev/ttyUSB0,
         baudrate: 1000000,
-      },
-    "01":
-      {
-        port: /dev/ttyUSB1,
-        baudrate: 1000000,
-      },
+      }
   }
 
 # Servo descriptions

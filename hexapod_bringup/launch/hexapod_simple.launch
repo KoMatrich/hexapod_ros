@@ -2,14 +2,15 @@
 <!-- Minimal bringup - just locomotion and joy teleop no visual nodes launch file -->
 
 <launch>
-    <arg name="config" default="phantomX"/>
+    <arg name="model" default="phantomX"/>
+    <arg name="config" default="phantomX_dual"/>
     <arg name="joy_mapping" default="joystick_xone"/>
 
     <rosparam command="load" file="$(find hexapod_description)/params/$(arg config).yaml" />
     <rosparam command="load" file="$(find hexapod_description)/params/dynamixel.yaml" />
     <rosparam command="load" file="$(find hexapod_description)/params/$(arg joy_mapping).yaml" />
 
-    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find hexapod_description)/urdf/$(arg config)_model.xacro'" />
+    <param name="robot_description" command="$(find xacro)/xacro '$(find hexapod_description)/urdf/$(arg model)_model.xacro'" />
 
     <include file="$(find hexapod_bringup)/launch/components/joy_teleop.launch" />
     <include file="$(find hexapod_bringup)/launch/components/locomotion.launch" />

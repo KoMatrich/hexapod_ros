@@ -3,7 +3,6 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="Golem">
 
     <!-- parameters -->
-    <xacro:property name="pi" value="3.1415926535897931"/>
     <xacro:property name="body_length_x" value="0.3556"/>
     <xacro:property name="body_length_y" value="0.165"/>
     <xacro:property name="coxa_length" value="0.05893"/>
