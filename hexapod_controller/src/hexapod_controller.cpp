@@ -49,21 +49,25 @@ int main( int argc, char **argv )
     Gait gait;
     Ik ik;
 
-    ParallelExecutor<ServoDriver> parallel_executor;
     std::vector<ServoDriver> servo_drivers;
+    ParallelExecutor<ServoDriver> parallel_executor(servo_drivers);
 
     XmlRpc::XmlRpcValue SERVOS_DRIVERS;
     ros::param::get( "SERVOS_DRIVERS", SERVOS_DRIVERS );
+    ROS_DEBUG("Number of servo drivers: %d", SERVOS_DRIVERS.size());
+
     for( XmlRpc::XmlRpcValue::iterator it = SERVOS_DRIVERS.begin(); it != SERVOS_DRIVERS.end(); it++ )
     {
         std::string port;
-        int baudrate;
+        int baudrate = -1;
 
-        ros::param::get( "/SERVOS_DRIVERS/" + it->first + "port", port);
-        ros::param::get( "/SERVOS_DRIVERS/" + it->first + "baudrate", baudrate);
+        ros::param::get( "SERVOS_DRIVERS/" + static_cast<std::string>( it->first ) + "/port", port);
+        ros::param::get( "SERVOS_DRIVERS/" + static_cast<std::string>( it->first ) + "/baudrate", baudrate);
+        int driver_id = atoi(it->first.c_str());
 
-        ServoDriver servo_driver("/dev/ttyUSB0", baudrate, atoi(it->first.c_str()));
-        servo_drivers.push_back(servo_driver);
+        ROS_DEBUG("Servo driver port: %s with baudrate: %d and driver_id: %d", port.c_str(), baudrate, driver_id);
+
+        servo_drivers.emplace_back(port.c_str(), baudrate, driver_id);
     }
 
     if( servo_drivers.size() == 0 )
@@ -103,7 +107,7 @@ int main( int argc, char **argv )
         if( control.getHexActiveState() == true && control.getPrevHexActiveState() == false )
         {
             ROS_INFO("Hexapod standing up.");
-            parallel_executor.run(servo_drivers, &ServoDriver::lockServos);
+            parallel_executor.run( &ServoDriver::lockServos );
 
             while( control.body_.position.z < control.STANDING_BODY_HEIGHT && ros::ok() )
             {
@@ -117,8 +121,8 @@ int main( int argc, char **argv )
                 control.publishOdometry( control.gait_vel_ );
                 control.publishTwist( control.gait_vel_ );
 
-                //broadcast over USB2AX 
-                parallel_executor.run(servo_drivers, &ServoDriver::transmitServoPositionsInter, control.joint_state_, true);
+                //broadcast over USB2AX
+                parallel_executor.run( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
 
                 loopControl.sleep();
             }
@@ -132,24 +136,24 @@ int main( int argc, char **argv )
         {
             // Divide cmd_vel by the loop rate to get appropriate velocities for gait period
             control.partitionCmd_vel( &control.cmd_vel_ );
-            
+
             // Gait Sequencer
             gait.gaitCycle( control.cmd_vel_, &control.feet_, &control.gait_vel_ );
             control.publishTwist( control.gait_vel_ );
 
             // IK solver for legs and body orientation
             ik.calculateIK( control.feet_, control.body_, &control.legs_ );
-                    
-            parallel_executor.run(servo_drivers, &ServoDriver::getServoLoadsIterative, &control.joint_state_, 0);
-            
+
+            parallel_executor.run( &ServoDriver::getServoLoadsIterative, &control.joint_state_, 0 );
+
             // Commit new positions as well as jointStates
             control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
             control.publishOdometry( control.gait_vel_ );
             control.publishTwist( control.gait_vel_ );
-            
-            //broadcast over USB2AX 
-            parallel_executor.run(servo_drivers, &ServoDriver::transmitServoPositionsInter, control.joint_state_, true);
-            
+
+            //broadcast over USB2AX
+            parallel_executor.run( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
+
             // Set previous hex state of last loop so we know if we are shutting down on the next loop
             control.setPrevHexActiveState( true );
         }
@@ -173,20 +177,20 @@ int main( int argc, char **argv )
                 control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
                 control.publishOdometry( control.gait_vel_ );
                 control.publishTwist( control.gait_vel_ );
-                
-                //broadcast over USB2AX 
-                parallel_executor.run(servo_drivers, &ServoDriver::transmitServoPositionsInter, control.joint_state_, true);
+
+                //broadcast over USB2AX
+                parallel_executor.run( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
 
                 loopControl.sleep();
             }
 
             ROS_INFO("Hexapod is now sitting.");
-            parallel_executor.run(servo_drivers, &ServoDriver::freeServos);
+            parallel_executor.run( &ServoDriver::freeServos );
 
             // Locomotion is now shut off
             control.setPrevHexActiveState( false );
         }
-        
+
         // Sitting down with servo torque off. Publish jointState message
         if( control.getHexActiveState() == false && control.getPrevHexActiveState() == false )
         {
@@ -195,7 +199,7 @@ int main( int argc, char **argv )
             control.publishOdometry( control.gait_vel_ );
             control.publishTwist( control.gait_vel_ );
         }
-    
+
         loopControl.sleep();
     }
     ROS_INFO("Hexapod Controller is now shutting down.");

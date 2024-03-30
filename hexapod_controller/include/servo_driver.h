@@ -48,7 +48,7 @@ constexpr auto LEN_PRESENT_LOAD  = 2;
 class ServoDriver
 {
     public:
-        ServoDriver( const char* devicename, uint baudrate=1000000, uint driver_id=0);
+        ServoDriver( const char* device_name, uint baudrate=1000000, int driver_id=0);
         ~ServoDriver( void );
 
         void transmitServoPositions( const sensor_msgs::JointState &joint_state );
@@ -57,7 +57,7 @@ class ServoDriver
         void getServoLoadsIterative( sensor_msgs::JointState *joint_state, const int LOAD_READ_EVERY);
         void getServoLoads( sensor_msgs::JointState *joint_state );
         void getServoLoad( sensor_msgs::JointState *joint_state, uint index );
-        
+
         void makeSureServosAreOn();
 
         void freeServos( void );
@@ -65,11 +65,38 @@ class ServoDriver
 
         int getServoCount(){return SERVO_COUNT;};
 
-        const int DRIVER_ID;
+        // Move Constructor
+        ServoDriver(ServoDriver&& other) noexcept
+        {
+            portHandler = other.portHandler;
+            packetHandler = other.packetHandler;
+
+            other.portHandler = nullptr;
+            other.packetHandler = nullptr;
+        }
+
+        // Default Move Assignment Operator
+        ServoDriver& operator=(ServoDriver&& other) noexcept
+        {
+            if (this != &other) {
+                portHandler = other.portHandler;
+                packetHandler = other.packetHandler;
+
+                other.portHandler = nullptr;
+                other.packetHandler = nullptr;
+            }
+            return *this;
+        }
+
+        // Delete copy constructor and copy assignment operator
+        ServoDriver(const ServoDriver&) = delete;
+        ServoDriver& operator=(const ServoDriver&) = delete;
     private:
-        dynamixel::PortHandler *portHandler;
-        dynamixel::PacketHandler *packetHandler;
-        
+        int driver_id;
+
+        dynamixel::PortHandler* portHandler;
+        dynamixel::PacketHandler* packetHandler;
+
         uint8_t dxl_error = 0;                          // Dynamixel error
         uint16_t dxl_present_position = 0;              // Present position
         uint16_t currentPos, currentLoad;               // Current position, current load
@@ -84,17 +111,17 @@ class ServoDriver
 
         std::vector<int> pose_steps_; // Increment to use going from current position to goal position
         std::vector<int> write_pos_;  // Position of each servo for sync_write packet
-        
+
         std::vector<double> OFFSET; // Physical hardware offset of servo horn
         std::vector<int> ID;        // Servo IDs
         std::vector<int> TICKS;     // Total number of ticks, meaning resolution of dynamixel servo
         std::vector<int> CENTER;    // Center value of dynamixel servo
         std::vector<double> MAX_RADIANS; // Max rotation your servo is manufactured to do. i.e. 360 degrees for MX etc.
         std::vector<double> RAD_TO_SERVO_RESOLUTION; // Radians to servo conversion
-        
+
         XmlRpc::XmlRpcValue SERVOS; // Servo map from yaml config file
         std::vector<int> servo_orientation_; // If the servo is physically mounted backwards this sign is flipped
-        
+
         std::vector<std::string> servo_map_key_; // Servo map key
         std::vector<int> servo_to_joint_index_; // Converts servo index to joint index
 

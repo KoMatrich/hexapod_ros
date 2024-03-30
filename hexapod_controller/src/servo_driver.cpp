@@ -34,18 +34,20 @@
 // If servos are not on, no worries we read them later just to be safe
 //==============================================================================
 
-ServoDriver::ServoDriver( const char* deviceName, uint baudrate, uint driver_id): DRIVER_ID(driver_id) {
-    portHandler = dynamixel::PortHandler::getPortHandler(deviceName);
+ServoDriver::ServoDriver( const char* device_name, uint baudrate, int driver_id)
+{
+    this->driver_id = driver_id;
+    portHandler = dynamixel::PortHandler::getPortHandler(device_name);
     packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION);
 
     // Open port
     if ( portHandler->openPort() )
     {
-        ROS_INFO("Succeeded to open the port!");
+        ROS_INFO("Succeeded to open the port '%s' !", portHandler->getPortName());
         auto currentBaudRate = portHandler->getBaudRate();
         auto targetBaudRate = baudrate;
         // Set port baudrate
-        if ( portHandler->setBaudRate(baudrate) ) 
+        if ( portHandler->setBaudRate(baudrate) )
             ROS_INFO("Succeeded to change the baudrate! (%d) to (%d)", currentBaudRate, targetBaudRate);
         else
             ROS_WARN("Failed to change the baudrate! (%d) to (%d)", currentBaudRate, targetBaudRate);
@@ -69,9 +71,9 @@ ServoDriver::ServoDriver( const char* deviceName, uint baudrate, uint driver_id)
     int index = 0;
     for( XmlRpc::XmlRpcValue::iterator it = SERVOS.begin(); it != SERVOS.end(); it++ )
     {
-        int servo_driver_id = 0;
+        int servo_driver_id = -1;
         ros::param::get( "SERVOS/" + static_cast<std::string>( it->first ) + "/driver_id", servo_driver_id );
-        if( servo_driver_id == DRIVER_ID){
+        if( servo_driver_id == driver_id){
             servo_map_key_.push_back( it->first );
             servo_to_joint_index_.push_back( index );
         }
@@ -95,6 +97,7 @@ ServoDriver::ServoDriver( const char* deviceName, uint baudrate, uint driver_id)
     write_pos_.resize( SERVO_COUNT );
     pose_steps_.resize( SERVO_COUNT );
 
+    ROS_DEBUG("Adding %d servos to driver with id: %d", SERVO_COUNT, driver_id);
     for( int i = 0; i < SERVO_COUNT; i++ )
     {
         ros::param::get( "SERVOS/" + static_cast<std::string>( servo_map_key_[i] ) + "/offset", OFFSET[i] );
@@ -109,6 +112,8 @@ ServoDriver::ServoDriver( const char* deviceName, uint baudrate, uint driver_id)
         goal_pos_[i] = CENTER[i];
         write_pos_[i] = CENTER[i];
         pose_steps_[i] = 1;
+        ROS_DEBUG("Added servo ID: %d, Offset: %f, Ticks: %d, Center: %d, Max Radians: %f, Orientation: %d",
+            ID[i], OFFSET[i], TICKS[i], CENTER[i], MAX_RADIANS[i], servo_orientation_[i]);
     }
 }
 
@@ -118,6 +123,10 @@ ServoDriver::ServoDriver( const char* deviceName, uint baudrate, uint driver_id)
 
 ServoDriver::~ServoDriver( void )
 {
+    if( portHandler == nullptr )
+        return;
+
+    ROS_INFO("Shutting down servo driver with id: %d", driver_id);
     freeServos();
     portHandler->closePort();
 }
@@ -154,7 +163,7 @@ void ServoDriver::resToAngle( sensor_msgs::JointState &joint_state )
 
 void ServoDriver::makeSureServosAreOn()
 {
-    if( !servos_free_ )
+    if( !servos_free_ || !portOpenSuccess )
     {
         // Servos are on so return
         return;
@@ -172,7 +181,7 @@ void ServoDriver::makeSureServosAreOn()
             }
             else
             {
-                if( portOpenSuccess ) ROS_WARN("Read error on [ID:%02d]", ID[i]);
+                ROS_WARN("Read error on [ID:%02d]", ID[i]);
             }
         }
         lockServos();
@@ -185,11 +194,15 @@ void ServoDriver::makeSureServosAreOn()
 
 void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_state )
 {
+    if( !portOpenSuccess ){
+        return;
+    }
+
     angleToRes( joint_state ); // Convert angles to servo resolution
     makeSureServosAreOn();
 
     dynamixel::GroupSyncWrite groupSyncWrite( portHandler, packetHandler, GOAL_POSITION_L, LEN_GOAL_POSITION );
-    
+
     // Prepare packet for broadcast
     for( int i = 0; i < SERVO_COUNT; i++ )
     {
@@ -203,7 +216,7 @@ void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_s
         // Add param goal position
         param_goal_position[0] = DXL_LOBYTE(write_pos_[i]);
         param_goal_position[1] = DXL_HIBYTE(write_pos_[i]);
-        if( !groupSyncWrite.addParam(ID[i], param_goal_position) && portOpenSuccess )
+        if( !groupSyncWrite.addParam(ID[i], param_goal_position) )
         {
             ROS_WARN("Goal position param write failed on [ID:%02d]", ID[i]);
             writeParamSuccess = false;
@@ -213,7 +226,7 @@ void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_s
     // Broadcast packet over U2D2
     if( writeParamSuccess )
     {
-        if( groupSyncWrite.txPacket() != COMM_SUCCESS && portOpenSuccess ) ROS_WARN("Position write not successful!");
+        if( groupSyncWrite.txPacket() != COMM_SUCCESS ) ROS_WARN("Position write not successful!");
     }
 
     if( writeParamSuccess ){
@@ -231,6 +244,10 @@ void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_s
 //==============================================================================
 void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &joint_state, bool linear_steps)
 {
+    if( !portOpenSuccess ){
+        return;
+    }
+
     angleToRes( joint_state ); // Convert angles to servo resolution
     makeSureServosAreOn();
 
@@ -266,10 +283,10 @@ void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &jo
     // If nothing moved we abort no need to send packet with same positions
     if( interpolating == 0 )
         return;
-    
+
     if( linear_steps ){
         int step_size = std::min(5,max_step_size);
-        
+
         for( int i = 0; i < SERVO_COUNT; i++ )
         {
             pose_steps_[i] = std::ceil(pose_steps_[i] * step_size / max_step_size);
@@ -279,7 +296,7 @@ void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &jo
     // Interpolation is needed
     ros::Rate loop_rate( INTERPOLATION_LOOP_RATE );
     dynamixel::GroupSyncWrite groupSyncWrite( portHandler, packetHandler, GOAL_POSITION_L, LEN_GOAL_POSITION );
-    
+
     while( interpolating != 0 && ros::ok() )
     {
         // Prepare packet for broadcast
@@ -301,7 +318,7 @@ void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &jo
                     interpolating--;
                 }
             }
-            
+
             if( cur_pos_[i] > goal_pos_[i] )
             {
                 write_pos_[i] = write_pos_[i] - pose_steps_[i];
@@ -317,7 +334,7 @@ void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &jo
             // Add param goal position
             param_goal_position[0] = DXL_LOBYTE(write_pos_[i]);
             param_goal_position[1] = DXL_HIBYTE(write_pos_[i]);
-            if( !groupSyncWrite.addParam(ID[i], param_goal_position) && portOpenSuccess )
+            if( !groupSyncWrite.addParam(ID[i], param_goal_position) )
             {
                 ROS_WARN("Goal position param write failed on [ID:%02d]", ID[i]);
                 writeParamSuccess = false;
@@ -327,7 +344,7 @@ void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &jo
         // Broadcast packet over U2D2
         if( writeParamSuccess )
         {
-            if( groupSyncWrite.txPacket() != COMM_SUCCESS && portOpenSuccess ) ROS_WARN("Position write not successful!");
+            if( groupSyncWrite.txPacket() != COMM_SUCCESS ) ROS_WARN("Position write not successful!");
         }
         groupSyncWrite.clearParam();
 
@@ -372,10 +389,10 @@ float convertLoad(uint32_t data) {
 //==============================================================================
 
 void ServoDriver::getServoLoadsIterative( sensor_msgs::JointState *joint_state, const int LOAD_READ_EVERY)
-{   
+{
     static int load_read_skipped = 0; //number of cycles skipped
     static uint current_index = 0; //index of servo to read load from this cycle
-    
+
     joint_state->header.stamp = ros::Time::now();
 
     // makes main loop run faster
@@ -393,9 +410,9 @@ void ServoDriver::getServoLoadsIterative( sensor_msgs::JointState *joint_state, 
 //==============================================================================
 
 void ServoDriver::getServoLoads( sensor_msgs::JointState *joint_state )
-{   
+{
     joint_state->header.stamp = ros::Time::now();
-    
+
     for(int i = 0; i < SERVO_COUNT; i++ )
     {
         getServoLoad( joint_state, i);
@@ -407,10 +424,15 @@ void ServoDriver::getServoLoads( sensor_msgs::JointState *joint_state )
 //==============================================================================
 
 void ServoDriver::getServoLoad( sensor_msgs::JointState *joint_state, uint index)
-{   
+{
+    if( !portOpenSuccess ){
+        return;
+    }
+
+
     joint_state->header.stamp = ros::Time::now();
-    
-    if( packetHandler->read2ByteTxRx(portHandler, ID[index], PRESENT_LOAD_L, &currentLoad, &dxl_error) == COMM_SUCCESS && portOpenSuccess )
+
+    if( packetHandler->read2ByteTxRx(portHandler, ID[index], PRESENT_LOAD_L, &currentLoad, &dxl_error) == COMM_SUCCESS )
     {
         cur_load_[index] = servo_orientation_[index] * convertLoad(currentLoad);
 
@@ -419,7 +441,7 @@ void ServoDriver::getServoLoad( sensor_msgs::JointState *joint_state, uint index
     }
     else
     {
-        if( portOpenSuccess ) ROS_WARN("Read error on [ID:%02d]", ID[index]);
+        ROS_WARN("Read error on [ID:%02d]", ID[index]);
     }
 }
 
@@ -429,10 +451,14 @@ void ServoDriver::getServoLoad( sensor_msgs::JointState *joint_state, uint index
 
 void ServoDriver::freeServos( void )
 {
+    if( !portOpenSuccess ){
+        return;
+    }
+
     // Turn off torque
     for( int i = 0; i < SERVO_COUNT; i++ )
     {
-        if( packetHandler->write1ByteTxRx(portHandler, ID[i], TORQUE_ENABLE, TORQUE_OFF, &dxl_error) != COMM_SUCCESS && portOpenSuccess )
+        if( packetHandler->write1ByteTxRx(portHandler, ID[i], TORQUE_ENABLE, TORQUE_OFF, &dxl_error) != COMM_SUCCESS )
         {
             ROS_WARN("TURN TORQUE OFF FAILED ON SERVO [ID:%02d]", ID[i]);
             torque_off = false;
@@ -451,9 +477,13 @@ void ServoDriver::freeServos( void )
 
 void ServoDriver::lockServos( void )
 {
+    if( !portOpenSuccess ){
+        return;
+    }
+
     // Turn on torque
     for( int i = 0; i < SERVO_COUNT; i++ ){
-        if( packetHandler->write1ByteTxRx(portHandler, ID[i], TORQUE_ENABLE, TORQUE_ON, &dxl_error) != COMM_SUCCESS && portOpenSuccess )
+        if( packetHandler->write1ByteTxRx(portHandler, ID[i], TORQUE_ENABLE, TORQUE_ON, &dxl_error) != COMM_SUCCESS )
         {
             ROS_WARN("TURN TORQUE ON SERVO FAILED [ID:%02d]", ID[i]);
             torque_on = false;

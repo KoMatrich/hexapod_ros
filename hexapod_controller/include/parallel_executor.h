@@ -32,55 +32,21 @@
 #include <thread>
 #include <future>
 
-// template<typename T>
-// class ParallelExecutor {
-// public:
-//     ParallelExecutor() {}
-//     ~ParallelExecutor() {
-//         for (auto& f : futures) {
-//             if (f.valid()) {
-//                 f.wait();
-//             }
-//         }
-//     }
-
-//     template<typename Function, typename... Args>
-//     void run(std::vector<T>& instances, Function function, Args... args) {
-//         // Wait for all previous tasks to complete
-//         for (auto& f : futures) {
-//             if (f.valid()) {
-//                 f.wait();
-//             }
-//         }
-//         futures.clear();
-
-//         // Launch a thread for each instance
-//         for (T& instance : instances) {
-//             std::packaged_task<void()> task([=, &instance] { (instance.*function)(args...); });
-//             futures.emplace_back(task.get_future());
-//             std::thread(std::move(task)).detach();
-//         }
-//     }
-    
-// private:
-//     std::vector<std::future<void>> futures;
-// };
-
 template<typename T>
 class ParallelExecutor {
 public:
-    ParallelExecutor() {}
+    ParallelExecutor(std::vector<T>& instances): instances(instances) {
+
+    }
+
+    ~ParallelExecutor() {
+        wait();
+    }
 
     template<typename Function, typename... Args>
-    void run(std::vector<T>& instances, Function function, Args... args) {
-        std::vector<std::future<void>> futures;
-
-        // Wait for all tasks to complete
-        for (auto& f : futures) {
-            if (f.valid()) {
-                f.wait();
-            }
-        }
+    void run(Function function, Args... args) {
+        // Wait for all previous tasks to complete
+        wait();
 
         // Launch a thread for each instance
         for (T& instance : instances) {
@@ -89,4 +55,17 @@ public:
             std::thread(std::move(task)).detach();
         }
     }
+
+    void wait(){
+        for (auto& f : futures) {
+            if (f.valid()) {
+                f.wait();
+            }
+        }
+        futures.clear();
+    }
+
+private:
+    std::vector<T>& instances;
+    std::vector<std::future<void>> futures;
 };

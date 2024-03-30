@@ -1,13 +1,17 @@
 cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.0.2)
 project( hexapod_controller )
 
 find_package( catkin REQUIRED COMPONENTS nodelet roscpp geometry_msgs sensor_msgs std_msgs hexapod_msgs tf dynamixel_sdk)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "-Wall -Wextra ${CMAKE_CXX_FLAGS}")
 
 catkin_package(
   INCLUDE_DIRS include
+  LIBRARIES hexapod_controller
   LIBRARIES hexapod_controller
   CATKIN_DEPENDS nodelet roscpp geometry_msgs sensor_msgs std_msgs hexapod_msgs tf
 )
