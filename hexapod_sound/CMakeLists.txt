@@ -1,17 +1,17 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(hexapod_sound)
 
 find_package( catkin REQUIRED COMPONENTS nodelet roscpp sound_play hexapod_msgs )
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES hexapod_sound 
+  LIBRARIES hexapod_sound
   CATKIN_DEPENDS nodelet roscpp sound_play hexapod_msgs
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable( hexapod_sound src/hexapod_sound.cpp ) 
+add_executable( hexapod_sound src/hexapod_sound.cpp )
 target_link_libraries( hexapod_sound ${catkin_LIBRARIES} )
 add_dependencies( hexapod_sound hexapod_msgs_generate_messages_cpp )
 
@@ -35,5 +35,4 @@ install(DIRECTORY sounds/
 )
 install(FILES hexapod_sound.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-  
- 
+

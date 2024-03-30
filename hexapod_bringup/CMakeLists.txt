@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(hexapod_bringup)
 
 find_package( catkin REQUIRED roslaunch )
@@ -14,5 +14,4 @@ install(DIRECTORY launch/
 install(FILES hexapod_bringup.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
-  
- 
+
