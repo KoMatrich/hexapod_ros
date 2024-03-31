@@ -107,7 +107,7 @@ int main( int argc, char **argv )
         if( control.getHexActiveState() == true && control.getPrevHexActiveState() == false )
         {
             ROS_INFO("Hexapod standing up.");
-            parallel_executor.run( &ServoDriver::lockServos );
+            parallel_executor.execute( &ServoDriver::lockServos );
 
             while( control.body_.position.z < control.STANDING_BODY_HEIGHT && ros::ok() )
             {
@@ -122,7 +122,7 @@ int main( int argc, char **argv )
                 control.publishTwist( control.gait_vel_ );
 
                 //broadcast over USB2AX
-                parallel_executor.run( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
+                parallel_executor.execute( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
 
                 loopControl.sleep();
             }
@@ -144,7 +144,7 @@ int main( int argc, char **argv )
             // IK solver for legs and body orientation
             ik.calculateIK( control.feet_, control.body_, &control.legs_ );
 
-            parallel_executor.run( &ServoDriver::getServoLoadsIterative, &control.joint_state_, 0 );
+            parallel_executor.execute( &ServoDriver::getServoLoadsIterative, &control.joint_state_, 0 );
 
             // Commit new positions as well as jointStates
             control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
@@ -152,7 +152,7 @@ int main( int argc, char **argv )
             control.publishTwist( control.gait_vel_ );
 
             //broadcast over USB2AX
-            parallel_executor.run( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
+            parallel_executor.execute( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
 
             // Set previous hex state of last loop so we know if we are shutting down on the next loop
             control.setPrevHexActiveState( true );
@@ -179,13 +179,13 @@ int main( int argc, char **argv )
                 control.publishTwist( control.gait_vel_ );
 
                 //broadcast over USB2AX
-                parallel_executor.run( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
+                parallel_executor.execute( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
 
                 loopControl.sleep();
             }
 
             ROS_INFO("Hexapod is now sitting.");
-            parallel_executor.run( &ServoDriver::freeServos );
+            parallel_executor.execute( &ServoDriver::freeServos );
 
             // Locomotion is now shut off
             control.setPrevHexActiveState( false );
