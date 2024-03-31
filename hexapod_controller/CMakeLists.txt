@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.0.2)
-cmake_minimum_required(VERSION 3.0.2)
 project( hexapod_controller )
 
 find_package( catkin REQUIRED COMPONENTS nodelet roscpp geometry_msgs sensor_msgs std_msgs hexapod_msgs tf dynamixel_sdk)

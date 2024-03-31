@@ -30,109 +30,92 @@
 #ifndef SERVO_DRIVER_H_
 #define SERVO_DRIVER_H_
 
+#include <memory>
 #include <cmath>
 #include <ros/ros.h>
 #include <dynamixel_sdk/dynamixel_sdk.h>
 #include <sensor_msgs/JointState.h>
 
-// Default setting
-constexpr auto PROTOCOL_VERSION  = 1.0;          // See which protocol version is used in the Dynamixel
-constexpr auto TORQUE_ON         = 1;
-constexpr auto TORQUE_OFF        = 0;
-constexpr auto LEN_GOAL_POSITION = 2;
-constexpr auto LEN_PRESENT_LOAD  = 2;
 //==============================================================================
 // Define the class(s) for Servo Drivers.
 //==============================================================================
 
+using namespace std;
+
+static constexpr auto PROTOCOL_VERSION  = 1.0;
+static constexpr auto TORQUE_ON         = 1;
+static constexpr auto TORQUE_OFF        = 0;
+static constexpr auto LEN_GOAL_POSITION = 2;
+static constexpr auto LEN_PRESENT_LOAD  = 2;
+
 class ServoDriver
 {
     public:
-        ServoDriver( const char* device_name, uint baudrate=1000000, int driver_id=0);
+        ServoDriver( const char* device_name, uint baudrate=1000000, int driver_id=-1);
         ~ServoDriver( void );
 
         void transmitServoPositions( const sensor_msgs::JointState &joint_state );
-        void transmitServoPositionsInter( const sensor_msgs::JointState &joint_state, bool linear_steps = true);
+        void transmitServoPositionsInter( const sensor_msgs::JointState &joint_state, bool linear_steps = true );
 
-        void getServoLoadsIterative( sensor_msgs::JointState *joint_state, const int LOAD_READ_EVERY);
+        void getServoLoadsIterative( sensor_msgs::JointState *joint_state, const uint LOAD_READ_EVERY );
         void getServoLoads( sensor_msgs::JointState *joint_state );
         void getServoLoad( sensor_msgs::JointState *joint_state, uint index );
+        int getServoCount(){return SERVO_COUNT;};
 
         void makeSureServosAreOn();
 
         void freeServos( void );
         void lockServos( void );
 
-        int getServoCount(){return SERVO_COUNT;};
+        // Move constructor and move assignment operator
+        ServoDriver(ServoDriver&& other) noexcept = default;
+        ServoDriver& operator=(ServoDriver&& other) noexcept = default;
 
-        // Move Constructor
-        ServoDriver(ServoDriver&& other) noexcept
-        {
-            portHandler = other.portHandler;
-            packetHandler = other.packetHandler;
-
-            other.portHandler = nullptr;
-            other.packetHandler = nullptr;
-        }
-
-        // Default Move Assignment Operator
-        ServoDriver& operator=(ServoDriver&& other) noexcept
-        {
-            if (this != &other) {
-                portHandler = other.portHandler;
-                packetHandler = other.packetHandler;
-
-                other.portHandler = nullptr;
-                other.packetHandler = nullptr;
-            }
-            return *this;
-        }
-
-        // Delete copy constructor and copy assignment operator
-        ServoDriver(const ServoDriver&) = delete;
-        ServoDriver& operator=(const ServoDriver&) = delete;
     private:
-        int driver_id;
+        void angleToRes( const sensor_msgs::JointState &joint_state );
+        void resToAngle(       sensor_msgs::JointState &joint_state );
 
-        dynamixel::PortHandler* portHandler;
-        dynamixel::PacketHandler* packetHandler;
+        unique_ptr<dynamixel::PortHandler> portHandler;
+        unique_ptr<dynamixel::PacketHandler> packetHandler;
 
         uint8_t dxl_error = 0;                          // Dynamixel error
         uint16_t dxl_present_position = 0;              // Present position
         uint16_t currentPos, currentLoad;               // Current position, current load
         uint8_t param_goal_position[2];
 
-        void angleToRes( const sensor_msgs::JointState &joint_state );
-        void resToAngle(       sensor_msgs::JointState &joint_state );
+        vector<float> cur_load_; // Current load of servos
+        vector<int> cur_pos_;  // Current position of servos
+        vector<int> goal_pos_; // Goal position of servos
 
-        std::vector<float> cur_load_; // Current load of servos
-        std::vector<int> cur_pos_;  // Current position of servos
-        std::vector<int> goal_pos_; // Goal position of servos
+        vector<int> pose_steps_; // Increment to use going from current position to goal position
+        vector<int> write_pos_;  // Position of each servo for sync_write packet
 
-        std::vector<int> pose_steps_; // Increment to use going from current position to goal position
-        std::vector<int> write_pos_;  // Position of each servo for sync_write packet
+        vector<double> OFFSET; // Physical hardware offset of servo horn
+        vector<int> ID;        // Servo IDs
+        vector<int> TICKS;     // Total number of ticks, meaning resolution of dynamixel servo
+        vector<int> CENTER;    // Center value of dynamixel servo
+        vector<double> MAX_RADIANS; // Max rotation your servo is manufactured to do. i.e. 360 degrees for MX etc.
+        vector<double> RAD_TO_SERVO_RESOLUTION; // Radians to servo conversion
+        vector<int> servo_orientation_; // If the servo is physically mounted backwards this sign is flipped
 
-        std::vector<double> OFFSET; // Physical hardware offset of servo horn
-        std::vector<int> ID;        // Servo IDs
-        std::vector<int> TICKS;     // Total number of ticks, meaning resolution of dynamixel servo
-        std::vector<int> CENTER;    // Center value of dynamixel servo
-        std::vector<double> MAX_RADIANS; // Max rotation your servo is manufactured to do. i.e. 360 degrees for MX etc.
-        std::vector<double> RAD_TO_SERVO_RESOLUTION; // Radians to servo conversion
-
-        XmlRpc::XmlRpcValue SERVOS; // Servo map from yaml config file
-        std::vector<int> servo_orientation_; // If the servo is physically mounted backwards this sign is flipped
-
-        std::vector<std::string> servo_map_key_; // Servo map key
-        std::vector<int> servo_to_joint_index_; // Converts servo index to joint index
+        vector<string> servo_map_key_; // Servo map key
+        vector<int> servo_to_joint_index_; // Converts servo index to joint index
 
         bool portOpenSuccess = false;
-        bool torque_on = true;
+        bool torque_on = true; //TODO: REFACTOR
         bool torque_off = true;
         bool writeParamSuccess = true;
         bool servos_free_;
 
-        int SERVO_COUNT;
+        int DRIVER_ID;
+        uint SERVO_COUNT;
         int TORQUE_ENABLE, PRESENT_POSITION_L, PRESENT_LOAD_L, GOAL_POSITION_L, INTERPOLATION_LOOP_RATE;
 };
+
+// Check if the class is move constructible, move assignable
+// need to be able to use emplace_back in to vector
+// prevents big template errors when compiling
+static_assert(std::is_move_assignable<ServoDriver>());
+static_assert(std::is_move_constructible<ServoDriver>());
 
 #endif // SERVO_DRIVER_H_

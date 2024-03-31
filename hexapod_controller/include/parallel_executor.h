@@ -32,12 +32,20 @@
 #include <thread>
 #include <future>
 
+
 template<typename T>
 class ParallelExecutor {
 public:
-    ParallelExecutor(std::vector<T>& instances): instances(instances) {
+    enum class ExecutionMode {
+        SEQUENTIAL, // one by one
+        SYNC,       // wait for all to finish
+        ASYNC,      // wait only if needed
+    };
 
-    }
+    ParallelExecutor(std::vector<T>& instances, ExecutionMode mode=ExecutionMode::ASYNC)
+    : instances(instances),
+    MODE(mode)
+    {}
 
     ~ParallelExecutor() {
         wait();
@@ -45,14 +53,26 @@ public:
 
     template<typename Function, typename... Args>
     void run(Function function, Args... args) {
-        // Wait for all previous tasks to complete
-        wait();
-
-        // Launch a thread for each instance
-        for (T& instance : instances) {
-            std::packaged_task<void()> task([=, &instance] { (instance.*function)(args...); });
-            futures.emplace_back(task.get_future());
-            std::thread(std::move(task)).detach();
+        switch(MODE){
+            case ExecutionMode::SEQUENTIAL:
+                for (T& instance : instances) {
+                    (instance.*function)(args...);
+                }
+                break;
+            case ExecutionMode::SYNC:
+                for (T& instance : instances) {
+                    (instance.*function)(args...);
+                }
+                wait();
+                break;
+            case ExecutionMode::ASYNC:
+                wait();
+                for (T& instance : instances) {
+                    std::packaged_task<void()> task([=, &instance] { (instance.*function)(args...); });
+                    futures.emplace_back(task.get_future());
+                    std::thread(std::move(task)).detach();
+                }
+                break;
         }
     }
 
@@ -68,4 +88,6 @@ public:
 private:
     std::vector<T>& instances;
     std::vector<std::future<void>> futures;
+
+    ExecutionMode MODE;
 };
