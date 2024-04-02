@@ -4,20 +4,17 @@
 
 int main(int argc, char *argv[])
 {
-
     ros::init(argc, argv, "main_gui");
     QApplication a(argc, argv);
 
-    MainGui w;
+    MainGui main_window;
 
-    // set the window title as the node name
-    w.setWindowTitle(QString::fromStdString(
-        ros::this_node::getName()));
+    main_window.setWindowTitle(QString::fromStdString(
+        "Qt UI"));
 
-    // load the icon from our qrc file and set it as the application icon
     QIcon icon(":/icons/my_gui_icon.png");
-    w.setWindowIcon(icon);
+    main_window.setWindowIcon(icon);
 
-    w.show();
+    main_window.show();
     return a.exec();
 }

@@ -45,6 +45,14 @@ sudo apt-get -y install ros-noetic-teleop-twist-keyboard
 sudo apt-get -y install libusb-1.0-0-dev
 ```
 
+#### Optional
+
+For data compression to reduce network bandwidth usage.
+
+```bash
+suod apt-get -y install ros-noetic-image-transport-plugins
+```
+
 ### [Speed up compilation](http://www.jamessjackson.com/gcc/ccache/distcc/compiling/c++/2017/07/25/ccache-and-distcc/)
 
 ```bash
