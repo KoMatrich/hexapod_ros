@@ -55,7 +55,7 @@ class ServoDriver
         ~ServoDriver( void );
 
         void transmitServoPositions( const sensor_msgs::JointState &joint_state );
-        void transmitServoPositionsInter( const sensor_msgs::JointState &joint_state, bool linear_steps = true );
+        void transmitServoPositionsInter( const sensor_msgs::JointState &joint_state);
 
         void getServoLoadsIterative( sensor_msgs::JointState *joint_state, const uint LOAD_READ_EVERY );
         void getServoLoads( sensor_msgs::JointState *joint_state );
@@ -108,6 +108,11 @@ class ServoDriver
         bool servos_free_;
 
         int DRIVER_ID;
+
+        bool INTERPOLATION_LINEAR = true;
+        int INTER_MAX_STEP_SIZE = 5;
+        int INTER_MIN_STEP_SIZE = 1;
+
         uint SERVO_COUNT;
         int TORQUE_ENABLE, PRESENT_POSITION_L, PRESENT_LOAD_L, GOAL_POSITION_L, INTERPOLATION_LOOP_RATE;
 };

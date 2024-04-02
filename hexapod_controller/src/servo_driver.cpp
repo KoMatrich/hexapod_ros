@@ -69,6 +69,10 @@ ServoDriver::ServoDriver( const char* device_name, uint baudrate, int driver_id)
     ros::param::get( "SERVOS", SERVOS );
     ros::param::get( "INTERPOLATION_LOOP_RATE", INTERPOLATION_LOOP_RATE );
 
+    ros::param::get( "INTERPOLATION_LINEAR", INTERPOLATION_LINEAR );
+    ros::param::get( "INTER_MAX_STEP_SIZE", INTER_MAX_STEP_SIZE );
+    ros::param::get( "INTER_MIN_STEP_SIZE", INTER_MIN_STEP_SIZE );
+
     int index = 0;
     for( XmlRpc::XmlRpcValue::iterator it = SERVOS.begin(); it != SERVOS.end(); it++ )
     {
@@ -247,7 +251,7 @@ void ServoDriver::transmitServoPositions( const sensor_msgs::JointState &joint_s
 //==============================================================================
 // Updates the positions of the servos and sends USB2AX broadcast packet (with interpolation)
 //==============================================================================
-void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &joint_state, bool linear_steps)
+void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &joint_state)
 {
     if( !portOpenSuccess )
         return;
@@ -256,7 +260,7 @@ void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &jo
     makeSureServosAreOn();
 
     int interpolating = 0;
-    int max_step_size = 1;
+    int max_step_size = INTER_MIN_STEP_SIZE;
 
     for( uint i = 0; i < SERVO_COUNT; i++ )
     {
@@ -264,7 +268,7 @@ void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &jo
         if( cur_pos_[i] != goal_pos_[i] )
         {
             interpolating++;
-            if( linear_steps ){
+            if( INTERPOLATION_LINEAR ){
                 pose_steps_[i] = std::max(std::abs(cur_pos_[i]-write_pos_[i]), 1);
             }else{
                 pose_steps_[i] = 1;
@@ -287,12 +291,12 @@ void ServoDriver::transmitServoPositionsInter( const sensor_msgs::JointState &jo
     if( interpolating == 0 )
         return;
 
-    if( linear_steps ){
-        int step_size = std::min(5,max_step_size);
+    if( INTERPOLATION_LINEAR ){
+        int step_size = std::min(max_step_size,INTER_MAX_STEP_SIZE);
 
         for( uint i = 0; i < SERVO_COUNT; i++ )
         {
-            pose_steps_[i] = std::ceil(pose_steps_[i] * step_size / max_step_size);
+            pose_steps_[i] = std::ceil(pose_steps_[i] * step_size / (float)max_step_size);
         }
     }
 

@@ -122,7 +122,7 @@ int main( int argc, char **argv )
                 control.publishTwist( control.gait_vel_ );
 
                 //broadcast over USB2AX
-                parallel_executor.execute( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
+                parallel_executor.execute( &ServoDriver::transmitServoPositionsInter, control.joint_state_ );
 
                 loopControl.sleep();
             }
@@ -152,7 +152,7 @@ int main( int argc, char **argv )
             control.publishTwist( control.gait_vel_ );
 
             //broadcast over USB2AX
-            parallel_executor.execute( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
+            parallel_executor.execute( &ServoDriver::transmitServoPositionsInter, control.joint_state_ );
 
             // Set previous hex state of last loop so we know if we are shutting down on the next loop
             control.setPrevHexActiveState( true );
@@ -179,7 +179,7 @@ int main( int argc, char **argv )
                 control.publishTwist( control.gait_vel_ );
 
                 //broadcast over USB2AX
-                parallel_executor.execute( &ServoDriver::transmitServoPositionsInter, control.joint_state_, true );
+                parallel_executor.execute( &ServoDriver::transmitServoPositionsInter, control.joint_state_ );
 
                 loopControl.sleep();
             }
