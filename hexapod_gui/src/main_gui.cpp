@@ -17,13 +17,14 @@ MainGui::MainGui(QWidget *parent)
     int rate;
 
     node_handler_->param<std::string>("JOINT_STATES_TOPIC", joint_states_topic, "/joint_states");
-    node_handler_->param<std::string>("JOY_TOPIC", joy_topic, "/joy_topic");
+    node_handler_->param<std::string>("JOY_TOPIC", joy_topic, "/joy_gui");
     node_handler_->param<std::string>("NEXT_GAIT_TOPIC", next_gait_topic, "/next_gait_topic");
 
     node_handler_->param<int>("RATE", rate, 10);
 
     // subscribers
-    joint_state_sub_ = node_handler_->subscribe<sensor_msgs::JointState>(joint_states_topic, 5, &MainGui::updateCallback, this);
+    joint_state_sub_ = node_handler_->subscribe<sensor_msgs::JointState>(
+        joint_states_topic, 5, &MainGui::updateCallback, this);
 
     // publishers
     state_joy_pub_ = node_handler_->advertise<sensor_msgs::Joy>(joy_topic, rate);
@@ -47,7 +48,9 @@ QString trim_number(float value){
 }
 
 void MainGui::updateCallback(const sensor_msgs::JointState::ConstPtr& msg){
-    auto msg_time = QString::number((double)(msg->header.stamp.nsec/(10^6))/(10^3),'f',2) + "s";
+    auto time = msg->header.stamp;
+    double seconds = time.sec % 60 + time.nsec / 1e9;
+    auto msg_time = QString::number(seconds, 'f', 2) + "s";
     auto frame_id = QString::fromStdString(msg->header.frame_id);
 
     ui_->RosTime->setText("Time: "+msg_time);
@@ -83,13 +86,13 @@ void MainGui::updateCallback(const sensor_msgs::JointState::ConstPtr& msg){
 }
 
 void MainGui::publishStates(){
-    joyState_.axes[0] = 0;
-    joyState_.axes[0] += 0 ? 1 : ui_->LPushButtonUp->isDown();
-    joyState_.axes[0] -= 0 ? 1 : ui_->LPushButtonBack->isDown();
-
     joyState_.axes[1] = 0;
-    joyState_.axes[1] += 0 ? 1 : ui_->LPushButtonRight->isDown();
-    joyState_.axes[1] -= 0 ? 1 : ui_->LPushButtonLeft->isDown();
+    joyState_.axes[1] += 0 ? 1 : ui_->LPushButtonUp->isDown();
+    joyState_.axes[1] -= 0 ? 1 : ui_->LPushButtonBack->isDown();
+
+    joyState_.axes[0] = 0;
+    joyState_.axes[0] += 0 ? 1 : ui_->LPushButtonLeft->isDown();
+    joyState_.axes[0] -= 0 ? 1 : ui_->LPushButtonRight->isDown();
 
     joyState_.buttons[0] = 0 ? 1 : ui_->RPushButtonA->isDown();
     joyState_.buttons[1] = 0 ? 1 : ui_->RPushButtonB->isDown();

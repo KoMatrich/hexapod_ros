@@ -11,7 +11,7 @@ export ROS_IP=$CONTROL
 # https://github.com/ms-iot/ros_comm/pull/56
 #=========================
 export SYNC_CLOCK=true
-export ROBOT=""
+# export ROBOT=""
 # ^ Uncoment to disable connection to robot
 #=========================
 
