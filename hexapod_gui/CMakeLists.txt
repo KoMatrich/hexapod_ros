@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(hexapod_gui)
 
 ################################
@@ -13,20 +13,13 @@ set(ROS_DEPENDS
 set(EXTERNAL_DEPENDS
   Qt5Widgets
   Qt5PrintSupport
-  #OpenCV
   )
 
 set(EXTERNAL_DEPENDS_LIB
   Qt5::Widgets
   Qt5::PrintSupport
   Qt5::Core
-  #${OpenCV_LIBS}
   )
-
-set(INCLUDE_DIRECTORIES
-  #${OpenCV_LIBS}
-  )
-
 
 ##########################################
 ##  Be Carefull editing below this line ##
@@ -77,7 +70,7 @@ file(GLOB HDRS
   "include/*.h"
 )
 file(GLOB SRCS
-  "src/*.cpp";
+  "src/*.cpp"
   "src/*.hpp"
 )
 file(GLOB NODES
@@ -97,17 +90,17 @@ file(GLOB_RECURSE UI
     "include/*.ui"
 )
 
-message("Adding ${PROJECT_NAME} UI files: " )
+message( STATUS "Adding ${PROJECT_NAME} UI files: " )
 foreach(source ${UI})
-    message("  - " ${source})
+    message( STATUS "  - " ${source})
 endforeach(source)
 
 #make them into headers
 qt5_wrap_ui (UI_HDRS  ${UI})
 
-message("Generating ${PROJECT_NAME} UI Headers: " )
+message( STATUS "Generating ${PROJECT_NAME} UI Headers: " )
 foreach(source ${UI_HDRS})
-    message("  - " ${source})
+    message( STATUS "  - " ${source})
 endforeach(source)
 
 # find all resource files
@@ -119,10 +112,10 @@ file(GLOB QRC
 ### compile
 ###
 
-message("buliding ${PROJECT_NAME} node: ")
+message( STATUS "buliding ${PROJECT_NAME} node: ")
 foreach(NODE_FILE ${NODES})
   get_filename_component(NODE_NAME ${NODE_FILE} NAME_WE)
-  message("  - " ${NODE_NAME})
+  message( STATUS "  - " ${NODE_NAME})
 
   add_executable(${NODE_NAME} ${NODE_FILE} ${HDRS} ${SRCS} ${UI} ${QRC})
   add_dependencies(${NODE_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

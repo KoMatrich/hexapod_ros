@@ -4,7 +4,6 @@
 <!--Developed by Shubhankar Das a.k.a Razbotics-->
 
 	<!-- parameters -->
-	<xacro:property name="pi" value="3.1415926535897931" />
 	<xacro:property name="body_length_x" value="0.294" />
 	<xacro:property name="body_length_y" value="0.340" />
 	<xacro:property name="coxa_length" value="0.052" />

@@ -4,14 +4,18 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(dynamixel_sdk)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
 ################################################################################
 # Find catkin packages and libraries for catkin and system dependencies
 ################################################################################
-find_package(catkin REQUIRED COMPONENTS roscpp)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy)
 
 ################################################################################
 # Setup for python modules and scripts
 ################################################################################
+catkin_python_setup()
 
 ################################################################################
 # Declare ROS messages, services and actions
@@ -26,7 +30,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp)
 ################################################################################
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp
+  CATKIN_DEPENDS roscpp rospy
   LIBRARIES dynamixel_sdk
 )
 
@@ -80,6 +84,18 @@ install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
+catkin_install_python(PROGRAMS
+  src/${PROJECT_NAME}/group_bulk_read.py
+  src/${PROJECT_NAME}/group_bulk_write.py
+  src/${PROJECT_NAME}/group_sync_read.py
+  src/${PROJECT_NAME}/group_sync_write.py
+  src/${PROJECT_NAME}/packet_handler.py
+  src/${PROJECT_NAME}/port_handler.py
+  src/${PROJECT_NAME}/protocol1_packet_handler.py
+  src/${PROJECT_NAME}/protocol2_packet_handler.py
+  src/${PROJECT_NAME}/robotis_def.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ################################################################################
 # Test

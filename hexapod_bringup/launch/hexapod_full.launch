@@ -2,13 +2,15 @@
 <!-- Full bringup no visual nodes launch file -->
 
 <launch>
-  <arg name="config" default="phantomX"/>
+  <arg name="model" default="phantomX"/>
+  <arg name="config" default="phantomX_dual"/>
   <arg name="joy_mapping" default="joystick_xone"/>
   <arg name="cammera_type" default="asus"/>
 
   <!-- Launching sound first since some packages have initial sounds -->
   <!-- <include file="$(find hexapod_bringup)/launch/components/sounds.launch" /> -->
   <include file="$(find hexapod_bringup)/launch/hexapod_simple.launch">
+    <arg name="model" value="$(arg model)"/>
     <arg name="config" value="$(arg config)"/>
     <arg name="joy_mapping" default="$(arg joy_mapping)"/>
   </include>

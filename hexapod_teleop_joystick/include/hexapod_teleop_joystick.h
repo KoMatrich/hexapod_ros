@@ -56,12 +56,26 @@ class HexapodTeleopJoystick
         ros::Publisher imu_override_pub_;
         bool NON_TELEOP; // Shuts down cmd_vel broadcast
 
+        static constexpr auto DEFAULT_JOY_TOPIC = "/joy";
+        static constexpr auto FALLBACK_JOY_TOPIC = "/joy_gui";
+        
     private:
-        void joyCallback( const sensor_msgs::Joy::ConstPtr &joy );
         ros::NodeHandle nh_;
-        ros::Subscriber joy_sub_;
         int STANDUP_BUTTON, SITDOWN_BUTTON, BODY_ROTATION_BUTTON, GAIT_SWITCH_BUTTON, FORWARD_BACKWARD_AXES, LEFT_RIGHT_AXES, YAW_ROTATION_AXES, PITCH_ROTATION_AXES;
         double MAX_METERS_PER_SEC, MAX_RADIANS_PER_SEC;
+
+        ros::Timer timer_;                          // timer for switching joy topics
+        ros::Time last_joy_input_;                   // last time DEFAULT_JOY_TOPIC was recived
+
+        ros::Subscriber joy_sub_;                   // subscriber for joy messages
+        ros::Subscriber joy_gui_sub;                // subscriber for joy_gui messages
+
+        void joyCallback( const sensor_msgs::Joy::ConstPtr &joy );
+        void joyGuiCallback( const sensor_msgs::Joy::ConstPtr &joy );
+
+        const char* used_joy_topic_ = DEFAULT_JOY_TOPIC;
+
+        void updateJoy(const sensor_msgs::Joy::ConstPtr &joy, const char* topic);
 };
 
 #endif // HEXAPOD_TELEOP_H_
