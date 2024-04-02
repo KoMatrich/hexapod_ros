@@ -17,7 +17,7 @@ MainGui::MainGui(QWidget *parent)
     int rate;
 
     node_handler_->param<std::string>("JOINT_STATES_TOPIC", joint_states_topic, "/joint_states");
-    node_handler_->param<std::string>("JOY_TOPIC", joy_topic, "/joy_topic");
+    node_handler_->param<std::string>("JOY_TOPIC", joy_topic, "/joy");
     node_handler_->param<std::string>("NEXT_GAIT_TOPIC", next_gait_topic, "/next_gait_topic");
 
     node_handler_->param<int>("RATE", rate, 10);
