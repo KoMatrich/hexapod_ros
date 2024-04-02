@@ -51,13 +51,16 @@ HexapodTeleopJoystick::HexapodTeleopJoystick( void )
     ros::param::get( "MAX_METERS_PER_SEC", MAX_METERS_PER_SEC );
     ros::param::get( "MAX_RADIANS_PER_SEC", MAX_RADIANS_PER_SEC );
     ros::param::get( "NON_TELEOP", NON_TELEOP );
-    joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("/joy", 5, &HexapodTeleopJoystick::joyCallback, this);
     body_scalar_pub_ = nh_.advertise<geometry_msgs::AccelStamped>("/body_scalar", 100);
     head_scalar_pub_ = nh_.advertise<geometry_msgs::AccelStamped>("/head_scalar", 100);
     cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 100);
     cmd_gait_switch_pub_ = nh_.advertise<std_msgs::Bool>("/cmd_gait_switch", 100);
     state_pub_ = nh_.advertise<std_msgs::Bool>("/state", 100);
     imu_override_pub_ = nh_.advertise<std_msgs::Bool>("/imu/imu_override", 100);
+
+    last_joy_input_ = ros::Time::now();
+    joy_sub_ = nh_.subscribe<sensor_msgs::Joy>(DEFAULT_JOY_TOPIC, 5, &HexapodTeleopJoystick::joyCallback, this);
+    joy_gui_sub = nh_.subscribe<sensor_msgs::Joy>(FALLBACK_JOY_TOPIC, 5, &HexapodTeleopJoystick::joyGuiCallback, this);
 }
 
 //==============================================================================
@@ -66,7 +69,27 @@ HexapodTeleopJoystick::HexapodTeleopJoystick( void )
 
 void HexapodTeleopJoystick::joyCallback( const sensor_msgs::Joy::ConstPtr &joy )
 {
+    updateJoy( joy, DEFAULT_JOY_TOPIC);
+}
+
+void HexapodTeleopJoystick::joyGuiCallback( const sensor_msgs::Joy::ConstPtr &joy )
+{
+    updateJoy( joy, FALLBACK_JOY_TOPIC);
+}
+
+void HexapodTeleopJoystick::updateJoy( const sensor_msgs::Joy::ConstPtr &joy, const char* topic){
     ros::Time current_time = ros::Time::now();
+
+    if ( used_joy_topic_ == topic ){
+        last_joy_input_ = current_time;
+    }else{
+        if ((current_time - last_joy_input_).toSec() < 5.0 ){
+            return;
+        }
+        used_joy_topic_ = topic;
+        ROS_INFO("Switching to available joy topic: %s", topic);
+    }
+
     if( joy->buttons[STANDUP_BUTTON] == 1 )
     {
         if ( state_.data == false)
@@ -117,7 +140,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "hexapod_teleop_joystick");
     HexapodTeleopJoystick hexapodTeleopJoystick;
 
-    ros::AsyncSpinner spinner(1); // Using 1 threads
+    ros::AsyncSpinner spinner(2);
     spinner.start();
 
     ros::Rate loop_rate( 100 ); // 100 hz

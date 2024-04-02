@@ -50,7 +50,7 @@ int main( int argc, char **argv )
     Ik ik;
 
     std::vector<ServoDriver> servo_drivers;
-    ParallelExecutor<ServoDriver> parallel_executor(servo_drivers);
+    ParallelExecutor<ServoDriver> parallel_executor(servo_drivers, ExecutionMode::SEQUENTIAL);
 
     XmlRpc::XmlRpcValue SERVOS_DRIVERS;
     ros::param::get( "SERVOS_DRIVERS", SERVOS_DRIVERS );
