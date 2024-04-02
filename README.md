@@ -1,4 +1,6 @@
 
+# WIP! (some features might be broken)
+
 # ROS Hexapod Stackc (ROS Noetic)
 
 ## 1. Documentation
@@ -17,8 +19,9 @@ Thanks to Shubhankar Das there are two gaits offered, the original sinusoidal tr
 
 ## 2. Expected Hardware for mapping
 
-* Primesense Sensor, Asus Xtion or Intel Realsense
-* ~~IMU (Current master branch uses a Phidgets 3/3/3 Spatial in launch files.)~~ Not i used
+* Asus Xtion
+* ~~Primesense Sensor or Intel Realsense~~
+* ~~IMU (Current master branch uses a Phidgets 3/3/3 Spatial in launch files.)~~
 
 ## 3. Dependencies
 
