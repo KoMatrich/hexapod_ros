@@ -87,13 +87,19 @@ MAX_LIFT_HEIGHT: 0.050
 # TRIPOD TETRAPOD WAVE RIPPLE
 GAIT_STYLE: "TRIPOD"
 
+# Hexapod model with front legs on different bus
 SERVOS_DRIVERS:
   {
     "00":
       {
         port: /dev/ttyUSB0,
         baudrate: 1000000,
-      }
+      },
+    "01":
+      {
+        port: /dev/ttyUSB1,
+        baudrate: 57600,
+      },
   }
 
 # Servo descriptions
@@ -181,7 +187,7 @@ SERVOS:
         max_radians: !degrees 300,
         sign: -1,
         offset: !degrees 0,
-        driver_id: 0,
+        driver_id: 1,
       },
     "08":
       {
@@ -193,7 +199,7 @@ SERVOS:
         max_radians: !degrees 300,
         sign: -1,
         offset: !degrees 14,
-        driver_id: 0,
+        driver_id: 1,
       },
     "09":
       {
@@ -205,7 +211,7 @@ SERVOS:
         max_radians: !degrees 300,
         sign: -1,
         offset: !degrees -48,
-        driver_id: 0,
+        driver_id: 1,
       },
     "10":
       {
@@ -289,7 +295,7 @@ SERVOS:
         max_radians: !degrees 300,
         sign: 1,
         offset: !degrees 0,
-        driver_id: 0,
+        driver_id: 1,
       },
     "17":
       {
@@ -301,7 +307,7 @@ SERVOS:
         max_radians: !degrees 300,
         sign: 1,
         offset: !degrees 14,
-        driver_id: 0,
+        driver_id: 1,
       },
     "18":
       {
@@ -313,6 +319,6 @@ SERVOS:
         max_radians: !degrees 300,
         sign: 1,
         offset: !degrees -48,
-        driver_id: 0,
+        driver_id: 1,
       },
   }

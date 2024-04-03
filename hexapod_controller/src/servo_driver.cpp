@@ -400,9 +400,6 @@ void ServoDriver::getServoLoadsIterative( sensor_msgs::JointState *joint_state, 
     if( SERVO_COUNT == 0 )
         return;
 
-    static uint load_read_skipped = 0; //number of cycles skipped
-    static uint current_index = 0; //index of servo to read load from this cycle
-
     joint_state->header.stamp = ros::Time::now();
 
     // makes main loop run faster

@@ -115,6 +115,9 @@ class ServoDriver
 
         uint SERVO_COUNT;
         int TORQUE_ENABLE, PRESENT_POSITION_L, PRESENT_LOAD_L, GOAL_POSITION_L, INTERPOLATION_LOOP_RATE;
+
+        uint load_read_skipped; //number of cycles skipped
+        uint current_index; //index of servo to read load from this cycle
 };
 
 // Check if the class is move constructible, move assignable
