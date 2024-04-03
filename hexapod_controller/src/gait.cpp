@@ -31,17 +31,45 @@
 
 static const double PI = atan(1.0) * 4.0;
 
+namespace Gait{
+    bool isIdValid(int gait_id){
+        return gait_id >= ID::NONE && gait_id < ID::NUM_GAIT_STYLES;
+    }
+
+    bool isSet(int gait_id){
+        return gait_id >= 0 && gait_id < ID::NUM_GAIT_STYLES;
+    }
+
+    bool isSet(ID gait){
+        return gait >= 0 && gait < ID::NUM_GAIT_STYLES;
+    }
+
+    ID fromId(int gait_id){
+        assert(isIdValid(gait_id));
+        return static_cast<ID>(gait_id);
+    }
+
+    ID next(ID gait){
+        if( !isSet(gait) ){
+            assert(false);
+            return Gait::ID::NONE;
+        }
+
+        return static_cast<ID>((gait + 1) % ID::NUM_GAIT_STYLES);
+    }
+}
+
 //==============================================================================
 //  Constructor: Initialize gait variables
 //==============================================================================
 
-Gait::Gait(void)
+GaitSequencer::GaitSequencer(void)
 {
-    int GAIT_STYLE_ID = -1;
+    int GaitStyle_ID = -1;
     ros::param::get("CYCLE_LENGTH", CYCLE_LENGTH);
     ros::param::get("LEG_LIFT_HEIGHT", LEG_LIFT_HEIGHT);
     ros::param::get("NUMBER_OF_LEGS", NUMBER_OF_LEGS);
-    ros::param::get("GAIT_STYLE_ID", GAIT_STYLE_ID);
+    ros::param::get("GaitStyle_ID", GaitStyle_ID);
 
     is_travelling_ = false;
     in_cycle_ = false;
@@ -52,19 +80,19 @@ Gait::Gait(void)
     current_time_ = ros::Time::now();
     last_time_ = ros::Time::now();
 
-    Gait_Style GAIT_STYLE = idToGait(GAIT_STYLE_ID);
-    if ( GAIT_STYLE == Gait_Style::NONE ){
-        GAIT_STYLE = idToGait(0);
+    Gait::ID GaitStyle = Gait::fromId(GaitStyle_ID);
+    if ( GaitStyle == Gait::ID::NONE ){
+        GaitStyle = Gait::fromId(0);
     }
 
-    setupGait(GAIT_STYLE);
+    setupGait(GaitStyle);
 }
 
 //=============================================================================
 // Gait Sequence Change
 //=============================================================================
 
-void Gait::sequence_change(std::vector<int> &vec)
+void GaitSequencer::sequence_change(std::vector<int> &vec)
 {
     for (size_t i = 0; i < vec.size(); i++)
 {
@@ -73,57 +101,34 @@ void Gait::sequence_change(std::vector<int> &vec)
     }
 }
 
-bool Gait::isGaitIdValid(int gait_id){
-    return gait_id >= Gait_Style::NONE && gait_id < Gait_Style::NUM_GAIT_STYLES;
-}
-
-bool Gait::isGaitIdSet(int gait_id){
-    return gait_id >= 0 && gait_id < Gait_Style::NUM_GAIT_STYLES;
-}
-
-bool Gait::isGaitSet(Gait_Style gait){
-    return gait >= 0 && gait < Gait_Style::NUM_GAIT_STYLES;
-}
-
-Gait_Style Gait::nextGait(Gait_Style gait){
-    // return next gait style in sequence or loops to first
-    assert(isGaitSet(gait));
-    return static_cast<Gait_Style>((gait + 1) % Gait_Style::NUM_GAIT_STYLES);
-}
-
-Gait_Style Gait::idToGait(int gait_id){
-    assert(isGaitIdValid(gait_id));
-    return static_cast<Gait_Style>(gait_id);
-}
-
-void Gait::setupGait(Gait_Style gait){
+void GaitSequencer::setupGait(Gait::ID gait){
     switch (gait)
     {
-    case Gait_Style::TRIPOD:
+    case Gait::ID::TRIPOD:
         cycle_steps_ = 2;
         cycle_leg_number_ = {1, 0, 1, 0, 1, 0};
         ROS_INFO("Switching to Tripod Gait");
         break;
 
-    case Gait_Style::TETRAPOD:
+    case Gait::ID::TETRAPOD:
         cycle_steps_ = 3;
         cycle_leg_number_ = {1, 0, 2, 0, 2, 1};
         ROS_INFO("Switching to Tetrapod Gait");
         break;
 
-    case Gait_Style::WAVE:
+    case Gait::ID::WAVE:
         cycle_steps_ = 6;
         cycle_leg_number_ = {0, 1, 2, 3, 4, 5};
         ROS_INFO("Switching to Wave Gait");
         break;
 
-    case Gait_Style::RIPPLE:
+    case Gait::ID::RIPPLE:
         cycle_steps_ = 6;
         cycle_leg_number_ = {0, 2, 4, 1, 3, 5};
         ROS_INFO("Switching to Ripple Gait");
         break;
 
-    case Gait_Style::NUM_GAIT_STYLES:
+    case Gait::ID::NUM_GAIT_STYLES:
         // wont actually happen
         __builtin_unreachable();
         break;
@@ -135,14 +140,14 @@ void Gait::setupGait(Gait_Style gait){
     };
 
     active_gait_ = gait;
-    next_gait = nextGait(active_gait_);
+    next_gait = Gait::next(active_gait_);
 }
 
 //=============================================================================
 // step calculation
 //=============================================================================
 
-void Gait::cyclePeriod(const geometry_msgs::Pose2D &base, hexapod_msgs::FeetPositions *feet, geometry_msgs::Twist *gait_vel)
+void GaitSequencer::cyclePeriod(const geometry_msgs::Pose2D &base, hexapod_msgs::FeetPositions *feet, geometry_msgs::Twist *gait_vel)
 {
     current_time_ = ros::Time::now();
     double dt = (current_time_ - last_time_).toSec();
@@ -189,7 +194,7 @@ void Gait::cyclePeriod(const geometry_msgs::Pose2D &base, hexapod_msgs::FeetPosi
 // Gait Sequencing
 //=============================================================================
 
-void Gait::gaitCycle(const geometry_msgs::Twist &cmd_vel, hexapod_msgs::FeetPositions *feet, geometry_msgs::Twist *gait_vel)
+void GaitSequencer::gaitCycle(const geometry_msgs::Twist &cmd_vel, hexapod_msgs::FeetPositions *feet, geometry_msgs::Twist *gait_vel)
 {
     // Convert velocities into actual distance for gait/foot positions
     geometry_msgs::Pose2D base;
@@ -266,13 +271,13 @@ void Gait::gaitCycle(const geometry_msgs::Twist &cmd_vel, hexapod_msgs::FeetPosi
     }
 }
 
-void Gait::setGait(Gait_Style gait){
+void GaitSequencer::setGait(Gait::ID gait){
     if ( switch_gait ){
         ROS_INFO("Waiting for gait to finish for switch.");
     }else{
         ROS_INFO("Gait switch pulse received.");
 
-        if(isGaitSet(gait)){
+        if(isSet(gait)){
             next_gait = gait;
             ROS_DEBUG("Switching to Gait Style: %d", gait);
         }else{

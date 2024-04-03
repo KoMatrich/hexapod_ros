@@ -46,7 +46,7 @@ int main( int argc, char **argv )
 
     // Create class objects
     Control control;
-    Gait gait;
+    GaitSequencer gait;
     Ik ik;
 
     std::vector<ServoDriver> servo_drivers;
@@ -96,8 +96,8 @@ int main( int argc, char **argv )
             gait.setGait();
         }
 
-        if( gait.isGaitIdSet(control.next_gait_id) ){
-            gait.setGait( gait.idToGait(control.next_gait_id) );
+        if( Gait::isSet(control.next_gait_id) ){
+            gait.setGait( Gait::fromId(control.next_gait_id) );
         }
 
         // Start button on controller has been pressed stand up

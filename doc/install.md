@@ -102,7 +102,9 @@ export ROS_PARALLEL_JOBS='-j'$(distcc -j)'  -l'$(distcc -j)
 mkdir ws && cd ws
 # clone repo to source folder
 git clone git@github.com:KoMatrich/hexapod_ros.git src
-# source and build repo
+# build repo
+catkin build
+# setup enviroment variables
 cd src && source bash_scipts/source_robot.sh
 ```
 
