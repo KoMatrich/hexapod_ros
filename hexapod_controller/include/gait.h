@@ -45,11 +45,12 @@
 // Defines available gait styles
 enum Gait_Style
 {
+    NONE = -1,
     TRIPOD,
     TETRAPOD,
     WAVE,
     RIPPLE,
-    NUM_GAIT_STYLES // utility enum
+    NUM_GAIT_STYLES, // utility enum
 };
 
 class Gait
@@ -57,25 +58,35 @@ class Gait
     public:
         Gait( void );
         void gaitCycle( const geometry_msgs::Twist &cmd_vel, hexapod_msgs::FeetPositions *feet, geometry_msgs::Twist *gait_vel );
-        
-        bool switch_gait;         // Switch gait next cycle
-        Gait_Style nextGait();    // Returns next planed gait style
+        void setGait(Gait_Style gait = Gait_Style::NONE);
+
+        bool switch_gait;                               // Switch gait next cycle
+        Gait_Style next_gait;                           // Next planed gait style
+
+        Gait_Style idToGait(int gait_id);
+        Gait_Style nextGait(Gait_Style gait);           // Returns next gait style
         Gait_Style getGait(){return active_gait_;};     // Returns current gait style
-        
+
+        bool isGaitIdValid(int gait_id);
+        bool isGaitIdSet(int gait_id);
+        bool isGaitSet(Gait_Style gait);
+
     private:
+        void setupGait(Gait_Style gait);
         void sequence_change( std::vector<int> &vec );
         void cyclePeriod( const geometry_msgs::Pose2D &base, hexapod_msgs::FeetPositions *feet, geometry_msgs::Twist *gait_vel );
-        void setupGait();
 
         geometry_msgs::Pose2D smooth_base_;
         ros::Time current_time_, last_time_;
 
-        bool is_travelling_;      // True if the robot is moving, not just in a cycle
-        bool in_cycle_;           // True if the robot is in a gait cycle
-
         int CYCLE_LENGTH;         // Number of steps in cycle
         int NUMBER_OF_LEGS;       // Leg order in cycle of the leg
         double LEG_LIFT_HEIGHT;   // Height of a leg cycle
+
+        Gait_Style active_gait_;  // Current gait style
+
+        bool is_travelling_;      // True if the robot is moving, not just in a cycle
+        bool in_cycle_;           // True if the robot is in a gait cycle
 
         int cycle_steps_;         // Number of steps in cycle
         int cycle_period_;        // Current period in cycle
@@ -83,10 +94,8 @@ class Gait
 
         double period_distance;
         double period_height;
-        
-        std::vector<int> cycle_leg_number_; // Leg gait order (grouping) ['RR', 'RM', 'RF', 'LR', 'LM', 'LF']
 
-        Gait_Style active_gait_;  // Active gait style
+        std::vector<int> cycle_leg_number_; // Leg gait order (grouping) ['RR', 'RM', 'RF', 'LR', 'LM', 'LF']
 };
 
 #endif // GAIT_H_

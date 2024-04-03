@@ -20,7 +20,7 @@ MainGui::MainGui(QWidget *parent)
     node_handler_->param<std::string>("JOY_TOPIC", joy_topic, "/joy_gui");
     node_handler_->param<std::string>("NEXT_GAIT_TOPIC", next_gait_topic, "/next_gait_topic");
 
-    node_handler_->param<int>("RATE", rate, 10);
+    node_handler_->param<int>("RATE", rate, 60);
 
     // subscribers
     joint_state_sub_ = node_handler_->subscribe<sensor_msgs::JointState>(
@@ -28,7 +28,7 @@ MainGui::MainGui(QWidget *parent)
 
     // publishers
     state_joy_pub_ = node_handler_->advertise<sensor_msgs::Joy>(joy_topic, rate);
-    next_gait_pub_ = node_handler_->advertise<std_msgs::String>(next_gait_topic, rate);
+    next_gait_pub_ = node_handler_->advertise<std_msgs::Int8>(next_gait_topic, rate);
 
     joyState_.axes.resize(2);
     joyState_.buttons.resize(4);
@@ -101,16 +101,16 @@ void MainGui::publishStates(){
 
     state_joy_pub_.publish(joyState_);
 
-    next_gait_.data = "";
+    next_gait_.data = -1;
 
     if(ui_->TripodGaitButton->isDown())
-        next_gait_.data = "Tripod";
+        next_gait_.data = 0;
     if(ui_->TetrapodGaitButton->isDown())
-        next_gait_.data = "Tetrapod";
-    if(ui_->RippleGaitButton->isDown())
-        next_gait_.data = "Ripple";
+        next_gait_.data = 1;
     if(ui_->WaveGaitButton->isDown())
-        next_gait_.data = "Wave";
+        next_gait_.data = 2;
+    if(ui_->RippleGaitButton->isDown())
+        next_gait_.data = 3;
 
     next_gait_pub_.publish(next_gait_);
 }

@@ -5,6 +5,7 @@
 #include <ros/ros.h>
 #include <qtimer.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Int8.h>
 #include <sensor_msgs/JointState.h>
 #include <sensor_msgs/Joy.h>
 
@@ -36,7 +37,7 @@ private:
     ros::Publisher next_gait_pub_;
 
     sensor_msgs::Joy joyState_;
-    std_msgs::String next_gait_;
+    std_msgs::Int8 next_gait_;
 
     void updateCallback(const sensor_msgs::JointState::ConstPtr& msg);
     void publishStates();

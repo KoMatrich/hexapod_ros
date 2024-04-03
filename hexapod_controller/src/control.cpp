@@ -70,7 +70,7 @@ Control::Control( void )
     joint_state_.name.resize( servo_map_key_.size() );
     joint_state_.position.resize( servo_map_key_.size() );
     joint_state_.effort.resize( servo_map_key_.size() );
-    
+
     servo_names_.resize( servo_map_key_.size() );
     servo_orientation_.resize( servo_map_key_.size() );
 
@@ -100,6 +100,7 @@ Control::Control( void )
     state_sub_ = nh_.subscribe<std_msgs::Bool>( "/state", 1, &Control::stateCallback, this );
     imu_override_sub_ = nh_.subscribe<std_msgs::Bool>( "/imu/imu_override", 1, &Control::imuOverrideCallback, this );
     imu_sub_ = nh_.subscribe<sensor_msgs::Imu>( "/imu/data", 1, &Control::imuCallback, this );
+    next_gait_sub_ = nh_.subscribe<std_msgs::Int8>( "/next_gait_topic", 1, &Control::cmdNextGaitCallback, this );
 
     // Topics we are publishing
     sounds_pub_ = nh_.advertise<hexapod_msgs::Sounds>( "/sounds", 10 );
@@ -468,3 +469,7 @@ void Control::partitionCmd_vel( geometry_msgs::Twist *cmd_vel )
     cmd_vel->angular.z = delta_th;
 }
 
+void Control::cmdNextGaitCallback( const std_msgs::Int8ConstPtr &next_gait_msg )
+{
+    next_gait_id = next_gait_msg->data;
+}

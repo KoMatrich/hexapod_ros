@@ -37,22 +37,27 @@ static const double PI = atan(1.0) * 4.0;
 
 Gait::Gait(void)
 {
+    int GAIT_STYLE_ID = -1;
     ros::param::get("CYCLE_LENGTH", CYCLE_LENGTH);
     ros::param::get("LEG_LIFT_HEIGHT", LEG_LIFT_HEIGHT);
     ros::param::get("NUMBER_OF_LEGS", NUMBER_OF_LEGS);
-    
+    ros::param::get("GAIT_STYLE_ID", GAIT_STYLE_ID);
+
     is_travelling_ = false;
     in_cycle_ = false;
 
-    cycle_period_ = 25;
+    cycle_period_ = 25; //TODO CYCLE_LENGTH/2
     extra_gait_cycle_ = 1;
-    
+
     current_time_ = ros::Time::now();
     last_time_ = ros::Time::now();
 
-    active_gait_ = Gait_Style::TRIPOD;
+    Gait_Style GAIT_STYLE = idToGait(GAIT_STYLE_ID);
+    if ( GAIT_STYLE == Gait_Style::NONE ){
+        GAIT_STYLE = idToGait(0);
+    }
 
-    setupGait();
+    setupGait(GAIT_STYLE);
 }
 
 //=============================================================================
@@ -68,39 +73,69 @@ void Gait::sequence_change(std::vector<int> &vec)
     }
 }
 
-Gait_Style Gait::nextGait(){
-    // return next gait style in sequence or loops to first
-    return static_cast<Gait_Style>((active_gait_ + 1) % Gait_Style::NUM_GAIT_STYLES);
+bool Gait::isGaitIdValid(int gait_id){
+    return gait_id >= Gait_Style::NONE && gait_id < Gait_Style::NUM_GAIT_STYLES;
 }
 
-void Gait::setupGait(){
-    switch (active_gait_)
+bool Gait::isGaitIdSet(int gait_id){
+    return gait_id >= 0 && gait_id < Gait_Style::NUM_GAIT_STYLES;
+}
+
+bool Gait::isGaitSet(Gait_Style gait){
+    return gait >= 0 && gait < Gait_Style::NUM_GAIT_STYLES;
+}
+
+Gait_Style Gait::nextGait(Gait_Style gait){
+    // return next gait style in sequence or loops to first
+    assert(isGaitSet(gait));
+    return static_cast<Gait_Style>((gait + 1) % Gait_Style::NUM_GAIT_STYLES);
+}
+
+Gait_Style Gait::idToGait(int gait_id){
+    assert(isGaitIdValid(gait_id));
+    return static_cast<Gait_Style>(gait_id);
+}
+
+void Gait::setupGait(Gait_Style gait){
+    switch (gait)
     {
     case Gait_Style::TRIPOD:
         cycle_steps_ = 2;
         cycle_leg_number_ = {1, 0, 1, 0, 1, 0};
+        ROS_INFO("Switching to Tripod Gait");
         break;
 
     case Gait_Style::TETRAPOD:
         cycle_steps_ = 3;
         cycle_leg_number_ = {1, 0, 2, 0, 2, 1};
+        ROS_INFO("Switching to Tetrapod Gait");
         break;
 
     case Gait_Style::WAVE:
         cycle_steps_ = 6;
         cycle_leg_number_ = {0, 1, 2, 3, 4, 5};
+        ROS_INFO("Switching to Wave Gait");
         break;
 
     case Gait_Style::RIPPLE:
         cycle_steps_ = 6;
         cycle_leg_number_ = {0, 2, 4, 1, 3, 5};
+        ROS_INFO("Switching to Ripple Gait");
         break;
 
     case Gait_Style::NUM_GAIT_STYLES:
         // wont actually happen
         __builtin_unreachable();
         break;
+
+    default:
+        ROS_ERROR("Invalid to switch to Gait Style: %d", gait);
+        ros::shutdown();
+        break;
     };
+
+    active_gait_ = gait;
+    next_gait = nextGait(active_gait_);
 }
 
 //=============================================================================
@@ -218,9 +253,8 @@ void Gait::gaitCycle(const geometry_msgs::Twist &cmd_vel, hexapod_msgs::FeetPosi
 
     if (is_travelling_ == false){
         if (switch_gait){
-            active_gait_ = nextGait();
             switch_gait = false;
-            setupGait();
+            setupGait(next_gait);
         }
     }
 
@@ -228,6 +262,23 @@ void Gait::gaitCycle(const geometry_msgs::Twist &cmd_vel, hexapod_msgs::FeetPosi
     if (cycle_period_ == CYCLE_LENGTH)
     {
         cycle_period_ = 0;
-        sequence_change(cycle_leg_number_); // sequence change
+        sequence_change(cycle_leg_number_);
+    }
+}
+
+void Gait::setGait(Gait_Style gait){
+    if ( switch_gait ){
+        ROS_INFO("Waiting for gait to finish for switch.");
+    }else{
+        ROS_INFO("Gait switch pulse received.");
+
+        if(isGaitSet(gait)){
+            next_gait = gait;
+            ROS_DEBUG("Switching to Gait Style: %d", gait);
+        }else{
+            ROS_DEBUG("Gait not set using next default gait");
+        }
+
+        switch_gait = true;
     }
 }
