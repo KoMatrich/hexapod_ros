@@ -80,8 +80,19 @@ LEG_LIFT_HEIGHT: 0.038
 MAX_LIFT_HEIGHT: 0.050
 
 GAIT_STYLE: "TRIPOD"
+
 # Speed in Hz that the servos interpolate between gait poses
 INTERPOLATION_LOOP_RATE: 550
+
+# ALL SERVOS BOUND TO ONE DRIVER
+SERVOS_DRIVERS:
+  {
+    "-1":
+      {
+        port: /dev/ttyUSB0,
+        baudrate: 1000000,
+      },
+  }
 
 # Servo descriptions
 SERVOS:

@@ -3,7 +3,7 @@
 
 <launch>
   <arg name="model" default="phantomX"/>
-  <arg name="config" default="phantomX_dual"/>
+  <arg name="config" default="phantomX"/>
   <arg name="joy_mapping" default="joystick_xone"/>
   <arg name="cammera_type" default="asus"/>
 
