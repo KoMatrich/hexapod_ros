@@ -50,7 +50,7 @@ int main( int argc, char **argv )
     Ik ik;
 
     std::vector<ServoDriver> servo_drivers;
-    ParallelExecutor<ServoDriver> parallel_executor(servo_drivers, ExecutionMode::SEQUENTIAL);
+    ParallelExecutor<ServoDriver> parallel_executor(servo_drivers, ExecutionMode::ASYNC);
 
     XmlRpc::XmlRpcValue SERVOS_DRIVERS;
     ros::param::get( "SERVOS_DRIVERS", SERVOS_DRIVERS );
@@ -141,7 +141,9 @@ int main( int argc, char **argv )
             // IK solver for legs and body orientation
             ik.calculateIK( control.feet_, control.body_, &control.legs_ );
 
+            // Get servo loads
             parallel_executor.execute( &ServoDriver::getServoLoadsIterative, &control.joint_state_, 0 );
+            //parallel_executor.execute( &ServoDriver::getServoLoads, &control.joint_state_ );
 
             // Commit new positions as well as jointStates
             control.publishJointStates( control.legs_, control.head_, &control.joint_state_ );
@@ -149,6 +151,7 @@ int main( int argc, char **argv )
             control.publishTwist( control.gait_vel_ );
 
             //broadcast over USB2AX
+            //parallel_executor.execute( &ServoDriver::transmitServoPositions, control.joint_state_ );
             parallel_executor.execute( &ServoDriver::transmitServoPositionsInter, control.joint_state_ );
 
             // Set previous hex state of last loop so we know if we are shutting down on the next loop
