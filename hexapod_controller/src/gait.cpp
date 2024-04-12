@@ -65,11 +65,11 @@ namespace Gait{
 
 GaitSequencer::GaitSequencer(void)
 {
-    int GaitStyle_ID = -1;
+    int GAIT_STYLE_ID = -1;
     ros::param::get("CYCLE_LENGTH", CYCLE_LENGTH);
     ros::param::get("LEG_LIFT_HEIGHT", LEG_LIFT_HEIGHT);
     ros::param::get("NUMBER_OF_LEGS", NUMBER_OF_LEGS);
-    ros::param::get("GaitStyle_ID", GaitStyle_ID);
+    ros::param::get("GAIT_STYLE_ID", GAIT_STYLE_ID);
 
     is_travelling_ = false;
     in_cycle_ = false;
@@ -80,7 +80,7 @@ GaitSequencer::GaitSequencer(void)
     current_time_ = ros::Time::now();
     last_time_ = ros::Time::now();
 
-    Gait::ID GaitStyle = Gait::fromId(GaitStyle_ID);
+    Gait::ID GaitStyle = Gait::fromId(GAIT_STYLE_ID);
     if ( GaitStyle == Gait::ID::NONE ){
         GaitStyle = Gait::fromId(0);
     }

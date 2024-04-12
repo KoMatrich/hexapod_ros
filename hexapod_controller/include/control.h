@@ -77,16 +77,18 @@ class Control
         geometry_msgs::Twist gait_vel_;
         geometry_msgs::Twist cmd_vel_;
 
+        // params
         int NUMBER_OF_LEGS;        // Number of legs
-        int NUMBER_OF_HEAD_JOINTS; // Number of head segments
         int NUMBER_OF_LEG_JOINTS;  // Number of leg segments
+        int NUMBER_OF_HEAD_JOINTS; // Number of head segments
         double MAX_BODY_ROLL_COMP, MAX_BODY_PITCH_COMP, COMPENSATE_INCREMENT, COMPENSATE_TO_WITHIN; // Auto-levelling yaml config
         double BODY_MAX_ROLL, BODY_MAX_PITCH, BODY_MAX_YAW, HEAD_MAX_YAW, HEAD_MAX_PITCH; // Mechanical limits
-        double VELOCITY_DIVISION;
-        int MASTER_LOOP_RATE;  // Master loop rate
         double STANDING_BODY_HEIGHT;
         double SITTING_BODY_HEIGHT;
+        int MASTER_LOOP_RATE;  // Master loop rate
+        double VELOCITY_DIVISION;
 
+        // variables
         int next_gait_id = -1;
         bool gait_switch_pulse = false;      //rising edge detected (manually restarted)
     private:

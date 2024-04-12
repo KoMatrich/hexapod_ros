@@ -34,10 +34,12 @@ class LoopControl{
         LoopControl( uint rate, const std::string name );
         bool sleep();
 
+        double get_cumulative_time() { return cumulative_cycle_time; };
+        double get_peak_time() { return peak_cycle_time; };
+
+        const uint RATE;        // Hz
+        const std::string NAME; // Name of the loop
     private:
-        const uint RATE;
-        const std::string NAME;
-        
         ros::Rate loop_rate;
 
         uint cant_keep_up_counter;

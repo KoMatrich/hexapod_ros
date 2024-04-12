@@ -79,14 +79,16 @@ class GaitSequencer
         void sequence_change( std::vector<int> &vec );
         void cyclePeriod( const geometry_msgs::Pose2D &base, hexapod_msgs::FeetPositions *feet, geometry_msgs::Twist *gait_vel );
 
+        // params
+        int CYCLE_LENGTH;         // Number of steps in cycle
+        double LEG_LIFT_HEIGHT;   // Height of a leg cycle
+        int NUMBER_OF_LEGS;       // Leg order in cycle of the leg
+
+        // variables
         geometry_msgs::Pose2D smooth_base_;
         ros::Time current_time_, last_time_;
 
         Gait::ID active_gait_;    // Current gait style
-
-        int CYCLE_LENGTH;         // Number of steps in cycle
-        int NUMBER_OF_LEGS;       // Leg order in cycle of the leg
-        double LEG_LIFT_HEIGHT;   // Height of a leg cycle
 
         bool is_travelling_;      // True if the robot is moving, not just in a cycle
         bool in_cycle_;           // True if the robot is in a gait cycle

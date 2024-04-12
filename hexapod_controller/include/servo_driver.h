@@ -75,6 +75,11 @@ class ServoDriver
         void angleToRes( const sensor_msgs::JointState &joint_state );
         void resToAngle(       sensor_msgs::JointState &joint_state );
 
+        // params
+        uint SERVO_COUNT;
+        int INTERPOLATION_LOOP_RATE;
+
+        // variables
         unique_ptr<dynamixel::PortHandler> portHandler;
         unique_ptr<dynamixel::PacketHandler> packetHandler;
 
@@ -113,8 +118,7 @@ class ServoDriver
         int INTER_MAX_STEP_SIZE = 5;
         int INTER_MIN_STEP_SIZE = 1;
 
-        uint SERVO_COUNT;
-        int TORQUE_ENABLE, PRESENT_POSITION_L, PRESENT_LOAD_L, GOAL_POSITION_L, INTERPOLATION_LOOP_RATE;
+        int TORQUE_ENABLE, PRESENT_POSITION_L, PRESENT_LOAD_L, GOAL_POSITION_L;
 
         uint load_read_skipped; //number of cycles skipped
         uint current_index; //index of servo to read load from this cycle
