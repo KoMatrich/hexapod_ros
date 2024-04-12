@@ -1,9 +1,6 @@
 echo "Running common part"
 echo "=============================="
 
-echo "Using ccache for fast compiling"
-export PATH=/usr/lib/ccache:$PATH
-
 echo "soucing ros noetic std libs"
 source /opt/ros/noetic/setup.bash
 

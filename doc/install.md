@@ -4,7 +4,7 @@
 
 ### OS
 
-Preferably Ubuntu 20.04 with ROS Noetid installed
+Preferably Ubuntu 20.04 with ROS Noetic installed
 
 REF: [ROS Noetic requirements](https://wiki.ros.org/noetic/Installation)
 
@@ -33,7 +33,7 @@ sudo apt-get -y install libusb-1.0-0-dev
 
 ### Packages by used hardware
 
-#### Realsence cammera
+#### Realsense camera
 
 ```bash
 sudo apt-get -y install ros-noetic-realsense2-camera
@@ -61,7 +61,7 @@ Depends on how you use controller
 
 If using Raspberry PI with Ubuntu to have working bluetooth.
 
-```
+```bash
 sudo apt-get -y install pi-bluetooth
 ```
 
@@ -73,12 +73,12 @@ For pairing a PS3 controller you can either install BlueZ5 or follow the below l
 
 ### Optional packages
 
-#### Data compresion
+#### Data compression
 
 For data compression to reduce network bandwidth usage. Required for use of compressed topics.
 
 ```bash
-suod apt-get -y install ros-noetic-image-transport-plugins
+sudo apt-get -y install ros-noetic-image-transport-plugins
 ```
 
 #### [Speed up compilation](http://www.jamessjackson.com/gcc/ccache/distcc/compiling/c++/2017/07/25/ccache-and-distcc/)
@@ -88,27 +88,35 @@ sudo apt-get -y install ccache distcc
 ```
 
 ```bash
-export PATH=/usr/lib/ccache:$PATH
-
-export CCACHE_PREFIX=distcc
 export DISTCC_HOSTS='localhost/4'
-export ROS_PARALLEL_JOBS='-j'$(distcc -j)'  -l'$(distcc -j)
+
+export CC="distcc gcc"
+export CXX="distcc g++"
+catkin build -p$(distcc -j) -j$(distcc -j) --no-jobserver
 ```
 
 ## Install of this repo
 
-```
+```bash
 # create workspace
 mkdir ws && cd ws
 # clone repo to source folder
 git clone git@github.com:KoMatrich/hexapod_ros.git src
 # build repo
 catkin build
-# setup enviroment variables
-cd src && source bash_scipts/source_robot.sh
+# setup environment variables
+cd src && source bash_scripts/source_robot.sh
 ```
 
-For further info look in `bash_scipts/source_robot.sh`
+Optionally to speed up compile time:
+
+```bash
+catkin cache --env-cache
+```
+
+[NOTE: if environment is changing it can have unwanted side effects.](https://catkin-tools.readthedocs.io/en/latest/verbs/catkin_config.html#accelerated-building-with-environment-caching)
+
+For further info look in `bash_scripts/source_robot.sh`
 
 ## Compiling recommendations
 
@@ -116,16 +124,18 @@ For further info look in `bash_scipts/source_robot.sh`
 
 ### Raspberry Pi2
 
-```
+```bash
 [workspace]/build/CMakeCache.txt
 Change: CMAKE_CXX_FLAGS:STRING=-O3 -mfloat-abi=hard -mfpu=neon-vfpv4 -mcpu=cortex-a7
 ```
 
 ### ODROID XU3
 
-```
+```bash
 [workspace]/build/CMakeCache.txt
 Change: CMAKE_CXX_FLAGS:STRING=-O3 -pipe -march=armv7-a -mcpu=cortex-a9 -mfloat-abi=hard
 ```
+
+### [General guide](https://catkin-tools.readthedocs.io/en/latest/cheat_sheet.html#profile-cookbook)
 
 ## [Issues](isues.md)

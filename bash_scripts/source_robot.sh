@@ -1,4 +1,4 @@
-source ./bash_scipts/common_setup.sh
+source ./bash_scripts/common_setup.sh
 
 #=========================
 # PC SPECIFIC !!!
