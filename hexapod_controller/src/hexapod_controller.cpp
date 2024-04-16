@@ -31,6 +31,7 @@
 #include <ros/ros.h>
 #include <control.h>
 #include <gait.h>
+#include <load_balancer.h>
 #include <ik.h>
 #include <servo_driver.h>
 #include <parallel_executor.h>
@@ -47,6 +48,7 @@ int main( int argc, char **argv )
     // Create class objects
     Control control;
     GaitSequencer gait;
+    LoadBalancer balancer(10,0.0025);
     Ik ik;
 
     std::vector<ServoDriver> servo_drivers;
@@ -137,6 +139,9 @@ int main( int argc, char **argv )
             // Gait Sequencer
             gait.gaitCycle( control.cmd_vel_, &control.feet_, &control.gait_vel_ );
             control.publishTwist( control.gait_vel_ );
+
+            // Load balancer
+            //balancer.compensate( control.feet_, control.joint_state_ );
 
             // IK solver for legs and body orientation
             ik.calculateIK( control.feet_, control.body_, &control.legs_ );

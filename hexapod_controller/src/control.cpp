@@ -234,6 +234,7 @@ void Control::publishTwist( const geometry_msgs::Twist &gait_vel )
 void Control::publishJointStates( const hexapod_msgs::LegsJoints &legs, const hexapod_msgs::RPY &head, sensor_msgs::JointState *joint_state )
 {
     joint_state->header.stamp = ros::Time::now();
+    joint_state->header.frame_id = "joint_state";
     int i = 0;
     for( int leg_index = 0; leg_index < NUMBER_OF_LEGS; leg_index++ )
     {

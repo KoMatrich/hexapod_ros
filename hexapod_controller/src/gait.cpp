@@ -95,9 +95,9 @@ GaitSequencer::GaitSequencer(void)
 void GaitSequencer::sequence_change(std::vector<int> &vec)
 {
     for (size_t i = 0; i < vec.size(); i++)
-{
-    vec[i] += 1;
-    vec[i] %= cycle_steps_;
+    {
+        vec[i] += 1;
+        vec[i] %= cycle_steps_;
     }
 }
 

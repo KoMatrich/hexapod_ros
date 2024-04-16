@@ -33,8 +33,8 @@
 #include <memory>
 #include <cmath>
 #include <ros/ros.h>
-#include <dynamixel_sdk/dynamixel_sdk.h>
 #include <sensor_msgs/JointState.h>
+#include <dynamixel_sdk/dynamixel_sdk.h>
 
 //==============================================================================
 // Define the class(s) for Servo Drivers.

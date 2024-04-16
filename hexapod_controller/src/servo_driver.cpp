@@ -444,7 +444,7 @@ void ServoDriver::getServoLoad( sensor_msgs::JointState *joint_state, uint index
         cur_load_[index] = servo_orientation_[index] * convertLoad(currentLoad);
 
         int msg_i = servo_to_joint_index_[index];
-        joint_state->effort[msg_i] = (cur_load_[index] + joint_state->effort[msg_i])/2; // Remove noise from load data by averaging
+        joint_state->effort[msg_i] = (cur_load_[index] + joint_state->effort[msg_i]*3)/4; // Remove noise from load data by averaging
     }
     else
     {
