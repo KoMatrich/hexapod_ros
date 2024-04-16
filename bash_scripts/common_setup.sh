@@ -1,6 +1,11 @@
 echo "Running common part"
 echo "=============================="
 
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+
 echo "soucing ros noetic std libs"
 source /opt/ros/noetic/setup.bash
 

@@ -17,8 +17,12 @@ catkin_package(
 
 ### FOR PROFILING (need to set after catkin_package)
 # http://wiki.ros.org/roslaunch/Tutorials/Profiling%20roslaunch%20nodes
-#add_compile_options(-pg)
-#set(catkin_LIBRARIES ${catkin_LIBRARIES} -pg)
+# if debug
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  message("Debug build ENABLED !")
+  add_compile_options(-pg)
+  set(catkin_LIBRARIES ${catkin_LIBRARIES} -pg)
+endif()
 ###
 
 include_directories(include ${catkin_INCLUDE_DIRS})
