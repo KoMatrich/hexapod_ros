@@ -56,15 +56,15 @@ public:
     void execute(Function function, Args&&... args) {
         switch(MODE) {
             case ExecutionMode::SEQUENTIAL:
-                runSeque(function, args...);
+                runSeque(function, std::forward<Args>(args)...);
                 break;
             case ExecutionMode::SYNC:
-                runAsync(function, args...);
+                runAsync(function, std::forward<Args>(args)...);
                 await();
                 break;
             case ExecutionMode::ASYNC:
                 await();
-                runAsync(function, args...);
+                runAsync(function, std::forward<Args>(args)...);
                 break;
         }
     }
@@ -73,7 +73,7 @@ public:
     template<typename Function, typename... Args>
     void runSeque(Function function, Args&&... args) {
         for (T& instance : instances) {
-            (instance.*function)(args...);
+            (instance.*function)(std::forward<Args>(args)...);
         }
     }
 
@@ -81,7 +81,7 @@ public:
     template<typename Function, typename... Args>
     void runAsync(Function function, Args&&... args) {
         for (T& instance : instances) {
-            futures.push_back(std::async(std::launch::async, [=, &instance] { (instance.*function)(args...); }));
+            futures.push_back(std::async(std::launch::async, [=, &instance, &args...] { (instance.*function)(std::forward<Args>(args)...); }));
         }
     }
 
