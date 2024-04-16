@@ -41,7 +41,7 @@ enum class ExecutionMode {
 template<typename T>
 class ParallelExecutor {
 public:
-    ParallelExecutor(std::vector<T>& instances, ExecutionMode mode=ExecutionMode::ASYNC)
+    ParallelExecutor(std::vector<T>& instances, ExecutionMode mode = ExecutionMode::ASYNC)
     : MODE(mode),
     instances(instances)
     {}
@@ -50,35 +50,35 @@ public:
         await();
     }
 
-    // execute class method in predefined mode
+    // Execute class method in predefined mode using perfect forwarding
     template<typename Function, typename... Args>
-    inline void execute(Function function, Args... args) {
-        switch(MODE){
+    inline void execute(Function function, Args&&... args) {
+        switch(MODE) {
             case ExecutionMode::SEQUENTIAL:
-                runSeque(function,args...);
+                runSeque(function, args...);
                 break;
             case ExecutionMode::SYNC:
-                runAsync(function,args...);
+                runAsync(function, args...);
                 await();
                 break;
             case ExecutionMode::ASYNC:
                 await();
-                runAsync(function,args...);
+                runAsync(function, args...);
                 break;
         }
     }
 
-    // run class method sequential
+    // Run class method sequentially using perfect forwarding
     template<typename Function, typename... Args>
-    inline void runSeque(Function function, Args... args) {
+    inline void runSeque(Function function, Args&&... args) {
         for (T& instance : instances) {
             (instance.*function)(args...);
         }
     }
 
-    // run class method async
+    // Run class method asynchronously using perfect forwarding
     template<typename Function, typename... Args>
-    inline void runAsync(Function function, Args... args){
+    inline void runAsync(Function function, Args&&... args) {
         for (T& instance : instances) {
             std::packaged_task<void()> task([=, &instance] { (instance.*function)(args...); });
             futures.emplace_back(task.get_future());
@@ -86,8 +86,8 @@ public:
         }
     }
 
-    // wait for all futures to finish
-    inline void await(){
+    // Wait for all futures to finish
+    inline void await() {
         for (auto& f : futures) {
             if (f.valid()) {
                 f.wait();
@@ -97,7 +97,7 @@ public:
     }
 
 private:
-    ExecutionMode MODE;                     // execution mode
-    std::vector<T>& instances;              // instances run on
-    std::vector<std::future<void>> futures; // futures for async
+    ExecutionMode MODE;                     // Execution mode
+    std::vector<T>& instances;              // Instances run on
+    std::vector<std::future<void>> futures; // Futures for async
 };
