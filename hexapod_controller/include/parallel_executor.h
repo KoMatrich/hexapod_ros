@@ -29,13 +29,13 @@
 
 #include <iostream>
 #include <vector>
-#include <thread>
 #include <future>
 
+// Enum class for execution modes
 enum class ExecutionMode {
-    SEQUENTIAL, // one by one
-    SYNC,       // wait for all to finish
-    ASYNC,      // wait only if needed
+    SEQUENTIAL, // Execute one by one
+    SYNC,       // Wait for all to finish before proceeding
+    ASYNC,      // Execute all asynchronously, wait only if needed
 };
 
 template<typename T>
@@ -47,12 +47,13 @@ public:
     {}
 
     ~ParallelExecutor() {
+        // ensure all tasks are completed
         await();
     }
 
     // Execute class method in predefined mode using perfect forwarding
     template<typename Function, typename... Args>
-    inline void execute(Function function, Args&&... args) {
+    void execute(Function function, Args&&... args) {
         switch(MODE) {
             case ExecutionMode::SEQUENTIAL:
                 runSeque(function, args...);
@@ -68,36 +69,34 @@ public:
         }
     }
 
-    // Run class method sequentially using perfect forwarding
+    // Run class method sequentially
     template<typename Function, typename... Args>
-    inline void runSeque(Function function, Args&&... args) {
+    void runSeque(Function function, Args&&... args) {
         for (T& instance : instances) {
             (instance.*function)(args...);
         }
     }
 
-    // Run class method asynchronously using perfect forwarding
+    // Run class method asynchronously
     template<typename Function, typename... Args>
-    inline void runAsync(Function function, Args&&... args) {
+    void runAsync(Function function, Args&&... args) {
         for (T& instance : instances) {
-            std::packaged_task<void()> task([=, &instance] { (instance.*function)(args...); });
-            futures.emplace_back(task.get_future());
-            std::thread(std::move(task)).detach();
+            futures.push_back(std::async(std::launch::async, [=, &instance] { (instance.*function)(args...); }));
         }
     }
 
     // Wait for all futures to finish
-    inline void await() {
+    void await() {
         for (auto& f : futures) {
             if (f.valid()) {
                 f.wait();
             }
         }
-        futures.clear();
+        futures.clear(); // Clearing futures after completion
     }
 
 private:
     ExecutionMode MODE;                     // Execution mode
-    std::vector<T>& instances;              // Instances run on
-    std::vector<std::future<void>> futures; // Futures for async
+    std::vector<T>& instances;              // Instances to run on
+    std::vector<std::future<void>> futures; // Futures for managing async tasks
 };
