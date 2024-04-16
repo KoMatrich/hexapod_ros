@@ -111,7 +111,7 @@ cd src && source bash_scripts/source_robot.sh
 Optionally to speed up compile time:
 
 ```bash
-catkin cache --env-cache
+catkin build --env-cache
 ```
 
 [NOTE: if environment is changing it can have unwanted side effects.](https://catkin-tools.readthedocs.io/en/latest/verbs/catkin_config.html#accelerated-building-with-environment-caching)
