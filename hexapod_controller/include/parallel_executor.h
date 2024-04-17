@@ -27,9 +27,92 @@
 
 // Author: Martin Kocich
 
-#include <iostream>
 #include <vector>
+#include <queue>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
 #include <future>
+
+class ThreadPool {
+public:
+    ThreadPool(size_t num_threads)
+    : stop(false) {
+        for (size_t i = 0; i < num_threads; ++i) {
+            workers.emplace_back(
+                [this] {
+                    while (true) {
+                        // null target task
+                        std::function<void()> task;
+
+                        {
+                            std::unique_lock<std::mutex> lock(this->queue_mutex);
+                            // wait for task or end of ThreadPool
+                            this->condition.wait(lock, [this] { return this->stop || !this->tasks.empty(); });
+
+                            // check if for end
+                            if ( this->stop )
+                                return;
+
+                            // set target task
+                            task = std::move(this->tasks.front());
+                            this->tasks.pop();
+                        }
+
+                        // execute task
+                        task();
+                    }
+                }
+            );
+        }
+    }
+
+    // add task to queue
+    template<class F, class... Args>
+    auto inline enqueue(F&& f, Args&&... args)
+        -> std::future<typename std::result_of<F(Args...)>::type> {
+
+        // shortcut for return type
+        using return_type = typename std::result_of<F(Args...)>::type;
+
+        auto task = std::make_shared< std::packaged_task<return_type()> >(
+            std::bind(f, args...)
+        );
+
+        std::future<return_type> res = task->get_future();
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+
+            // Don't allow enqueueing after stopping the pool
+            if (stop)
+                throw std::runtime_error("enqueue on stopped ThreadPool");
+
+            tasks.emplace([task]() { (*task)(); });
+        }
+
+        condition.notify_one();
+        return res;
+    }
+
+    ~ThreadPool() {
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            stop = true;
+        }
+        condition.notify_all();
+        for (std::thread &worker : workers)
+            worker.join();
+    }
+
+private:
+    std::vector<std::thread> workers;
+    std::queue<std::function<void()>> tasks;
+
+    std::mutex queue_mutex;
+    std::condition_variable condition;
+    bool stop;
+};
 
 // Enum class for execution modes
 enum class ExecutionMode {
@@ -41,9 +124,10 @@ enum class ExecutionMode {
 template<typename T>
 class ParallelExecutor {
 public:
-    ParallelExecutor(std::vector<T>& instances, ExecutionMode mode = ExecutionMode::ASYNC)
-    : MODE(mode),
-    instances(instances)
+    ParallelExecutor(std::vector<T>& instances, ExecutionMode mode = ExecutionMode::ASYNC):
+    instances(instances),
+    MODE(mode),
+    pool(std::thread::hardware_concurrency())
     {}
 
     ~ParallelExecutor() {
@@ -53,40 +137,44 @@ public:
 
     // Execute class method in predefined mode using perfect forwarding
     template<typename Function, typename... Args>
-    void execute(Function function, Args&&... args) {
+    void inline execute(Function function, Args&&... args) {
         switch(MODE) {
             case ExecutionMode::SEQUENTIAL:
-                runSeque(function, std::forward<Args>(args)...);
+                runSeque(function, args...);
                 break;
             case ExecutionMode::SYNC:
-                runAsync(function, std::forward<Args>(args)...);
+                runAsync(function, args...);
                 await();
                 break;
             case ExecutionMode::ASYNC:
                 await();
-                runAsync(function, std::forward<Args>(args)...);
+                runAsync(function, args...);
                 break;
         }
     }
 
     // Run class method sequentially
     template<typename Function, typename... Args>
-    void runSeque(Function function, Args&&... args) {
+    void inline runSeque(Function function, Args&&... args) {
         for (T& instance : instances) {
-            (instance.*function)(std::forward<Args>(args)...);
+            (instance.*function)(args...);
         }
     }
 
     // Run class method asynchronously
     template<typename Function, typename... Args>
-    void runAsync(Function function, Args&&... args) {
+    void inline runAsync(Function function, Args&&... args) {
         for (T& instance : instances) {
-            futures.push_back(std::async(std::launch::async, [=, &instance, &args...] { (instance.*function)(std::forward<Args>(args)...); }));
+            futures.push_back(pool.enqueue(
+                [&, function] {
+                    (instance.*function)(args...);
+                }
+            ));
         }
     }
 
     // Wait for all futures to finish
-    void await() {
+    void inline await() {
         for (auto& f : futures) {
             if (f.valid()) {
                 f.wait();
@@ -96,7 +184,9 @@ public:
     }
 
 private:
-    ExecutionMode MODE;                     // Execution mode
     std::vector<T>& instances;              // Instances to run on
-    std::vector<std::future<void>> futures; // Futures for managing async tasks
+
+    ExecutionMode MODE;                     // Execution mode
+    std::vector<std::future<void>> futures; // Vector for managing async tasks
+    ThreadPool pool;                        //
 };
