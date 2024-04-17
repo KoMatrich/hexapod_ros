@@ -35,7 +35,11 @@ class LoopControl{
         bool sleep();
 
         double get_cumulative_time() { return cumulative_cycle_time; };
-        double get_peak_time() { return peak_cycle_time; };
+
+        double get_max_time() { return max_cycle_time; };
+        double get_min_time() { return min_cycle_time; };
+
+        void zero();
 
         const uint RATE;        // Hz
         const std::string NAME; // Name of the loop
@@ -44,5 +48,5 @@ class LoopControl{
 
         uint cant_keep_up_counter;
         double cumulative_cycle_time;
-        double peak_cycle_time;
+        double min_cycle_time, max_cycle_time;
 };

@@ -32,9 +32,7 @@
 LoopControl::LoopControl(uint rate, const std::string name):
     RATE(rate), NAME(name), loop_rate(rate)
 {
-    cant_keep_up_counter = 0;
-    cumulative_cycle_time = 0;
-    peak_cycle_time = 0;
+    zero();
 }
 
 bool LoopControl::sleep(){
@@ -50,29 +48,37 @@ bool LoopControl::sleep(){
     double cycle_time = loop_rate.cycleTime().toNSec();
     cycle_time /= 1000000; // convert nS to mS
 
+    if( max_cycle_time < cycle_time )
+        max_cycle_time = cycle_time;
+
+    if( min_cycle_time > cycle_time )
+        min_cycle_time = cycle_time;
+
     cant_keep_up_counter++;
     cumulative_cycle_time += cycle_time;
-    if( peak_cycle_time < cycle_time )
-        peak_cycle_time = cycle_time;
-
 
     if( cant_keep_up_counter >= RATE ){
 
         double average_cycle_time = cumulative_cycle_time / cant_keep_up_counter;
-        
-        ROS_WARN("%s is not running at %d Hz", NAME.c_str(), RATE);
+
         ROS_WARN(
-            "Running at %0.1f Hz. Average cycle time: %0.1f ms. Peak cycle time: %0.1f ms.",
-            1000.0 / average_cycle_time, average_cycle_time, peak_cycle_time 
+            "%s is running %0.1f/%dHz Min:%0.1fms. A:%0.1fms. Max:%0.1fms.",
+             NAME.c_str(), 1000.0 / average_cycle_time, RATE, min_cycle_time, average_cycle_time, max_cycle_time
         );
 
-        cant_keep_up_counter = 0;
-        cumulative_cycle_time = 0;
-        peak_cycle_time = 0;
-    
+        zero();
+
         // Prevent feedback loop caused by printing
         loop_rate.reset();
     }
 
     return false;
+}
+
+void LoopControl::zero(){
+    cant_keep_up_counter = 0;
+    cumulative_cycle_time = 0;
+
+    max_cycle_time = 0;
+    min_cycle_time = DBL_MAX;
 }
