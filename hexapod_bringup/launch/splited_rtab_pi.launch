@@ -16,4 +16,5 @@
   <!-- <include file="$(find hexapod_bringup)/launch/components/imu_phidgets.launch" /> -->
   <include file="$(find hexapod_bringup)/launch/components/robot_localization_ekf.launch" />
   <include file="$(find hexapod_bringup)/launch/components/camera/$(arg cammera_type).launch" />
+  <include file="$(find hexapod_bringup)/launch/components/rtabmap_pi.launch" />
 </launch>

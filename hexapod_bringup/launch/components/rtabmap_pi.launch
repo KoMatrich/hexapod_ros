@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- rtabmap launch file -->
+
+<launch>
+  <node name="depthimage_to_laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan">
+    <!-- http://wiki.ros.org/depthimage_to_laserscan -->
+    <param name="scan_height" value="10" />
+    <param name="output_frame_id" value="body_link" />
+
+    <!-- INPUTS -->
+    <remap from="image" to="/camera/depth_registered/image_raw" />
+
+    <!-- OUTPUTS -->
+    <remap from="camera/scan" to="scan" />
+  </node>
+
+  <!-- Publish static transform from base_link to camera_link ; Adapt z-Value to the correct camera height -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_head_tilt_link" args="0 0 0.098 0 0 0  /base_link /head_tilt_link"/>
+
+  <!-- http://wiki.ros.org/rtabmap_ros/noetic_and_newer -->
+  <group ns="rtabmap">
+    <!-- sync depth with odometry -->
+    <node pkg="nodelet" type="nodelet" name="data_odom_sync" args="standalone rtabmap_legacy/data_odom_sync /standalone_nodelet">
+      <!-- http://wiki.ros.org/rtabmap_legacy#rtabmap_legacy.2Fdata_odom_sync -->
+      <param name="queue_size" type="int" value="20"/>
+      <!-- INPUTS -->
+      <remap from="odom_in" to="/odometry/calculated"/>
+      <remap from="rgb/image_in" to="/camera/rgb/image_rect_color"/>
+      <remap from="depth/image_in" to="/camera/depth_registered/image_raw"/>
+      <remap from="rgb/camera_info_in" to="/camera/depth_registered/camera_info"/>
+
+      <!-- OUTPUTS -->
+      <remap from="odom_out" to="/rtabmap/odometry/synchronized"/>
+      <remap from="rgb/image_out" to="/rtabmap/camera/rgb/image_rect_color"/>
+      <remap from="depth/image_out" to="/rtabmap/camera/depth_registered/image_raw"/>
+      <remap from="rgb/camera_info_out" to="/rtabmap/camera/depth_registered/camera_info"/>
+    </node>
+  </group>
+</launch>

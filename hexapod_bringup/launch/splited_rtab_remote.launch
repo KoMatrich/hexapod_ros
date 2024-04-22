@@ -2,5 +2,5 @@
 <!-- Only running rtabmap -->
 
 <launch>
-  <include file="$(find hexapod_bringup)/launch/components/rtabmap.launch" />
+  <include file="$(find hexapod_bringup)/launch/components/rtabmap_remote.launch" />
 </launch>
