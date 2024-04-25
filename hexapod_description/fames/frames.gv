@@ -1,0 +1,8 @@
+digraph G {
+"odom" -> "base_link"[label=" Broadcaster: /ekf_localization\nAverage rate: 31.886\nBuffer length: 0.188\nMost recent transform: 1714043096.816\nOldest transform: 1714043096.628\n"];
+"map" -> "odom"[label=" Broadcaster: /rtabmap/rtabmap\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 1714043096.924\nOldest transform: 1714043096.924\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1714043096.8472707"[ shape=plaintext ] ;
+}->"map";
+}
