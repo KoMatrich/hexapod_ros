@@ -45,6 +45,8 @@ int main( int argc, char **argv )
 {
     ros::init(argc, argv, "hexapod_controller");
 
+    const geometry_msgs::Twist CMD_ZERO_VEL;
+
     // Create class objects
     Control control;
     GaitSequencer gait;
@@ -112,6 +114,9 @@ int main( int argc, char **argv )
             {
                 control.body_.position.z = control.body_.position.z + 0.001;
 
+                // Gait Sequencer called to make sure we are on all six feet
+                gait.gaitCycle( CMD_ZERO_VEL, &control.feet_, &control.gait_vel_ );
+
                 // IK solver for legs and body orientation
                 ik.calculateIK( control.feet_, control.body_, &control.legs_ );
 
@@ -138,7 +143,6 @@ int main( int argc, char **argv )
 
             // Gait Sequencer
             gait.gaitCycle( control.cmd_vel_, &control.feet_, &control.gait_vel_ );
-            control.publishTwist( control.gait_vel_ );
 
             // Load balancer
             //balancer.compensate( control.feet_, control.joint_state_ );
@@ -167,13 +171,12 @@ int main( int argc, char **argv )
         if( control.getHexActiveState() == false && control.getPrevHexActiveState() == true )
         {
             ROS_INFO("Hexapod sitting down.");
-            const geometry_msgs::Twist zero_vel;
             while( control.body_.position.z > control.SITTING_BODY_HEIGHT  && ros::ok() )
             {
                 control.body_.position.z = control.body_.position.z - 0.001;
 
                 // Gait Sequencer called to make sure we are on all six feet
-                gait.gaitCycle( zero_vel, &control.feet_, &control.gait_vel_ );
+                gait.gaitCycle( CMD_ZERO_VEL, &control.feet_, &control.gait_vel_ );
 
                 // IK solver for legs and body orientation
                 ik.calculateIK( control.feet_, control.body_, &control.legs_ );
