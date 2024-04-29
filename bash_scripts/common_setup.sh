@@ -20,8 +20,8 @@ echo "sourcing catkin_ws"
 source ../devel/setup.bash
 
 echo "setting up MDNS"
-export CONTROL=$(avahi-resolve -n ros-vm.local | awk '{print $2}')
-export ROBOT=$(avahi-resolve -n ros.local | awk '{print $2}')
+export CONTROL=$(avahi-resolve -4n ros-vm.local | awk '{print $2}')
+export ROBOT=$(avahi-resolve -4n ros.local | awk '{print $2}')
 
 echo "=============================="
 echo "Robot   IP:$ROBOT"
