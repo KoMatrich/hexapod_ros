@@ -38,7 +38,7 @@
       <param name="Vis/InlierDistance" type="string" value="0.1"/>
       <param name="Mem/RehearsalSimilarity" type="string" value="0.30"/>
 
-      <param name="Rtabmap/TimeThr" type="string" value="0"/>
+      <param name="Rtabmap/TimeThr" type="string" value="1"/>
 
       <!-- INPUTS -->
       <remap from="odom" to="/rtabmap/odometry/synchronized"/>

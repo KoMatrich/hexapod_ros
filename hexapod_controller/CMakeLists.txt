@@ -3,6 +3,10 @@ project( hexapod_controller )
 
 find_package( catkin REQUIRED COMPONENTS nodelet roscpp geometry_msgs sensor_msgs std_msgs hexapod_msgs tf dynamixel_sdk)
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_STANDARD 20)
@@ -17,10 +21,11 @@ catkin_package(
 
 ### FOR PROFILING (need to set after catkin_package)
 # http://wiki.ros.org/roslaunch/Tutorials/Profiling%20roslaunch%20nodes
+# https://github.com/jrfonseca/gprof2dot?tab=readme-ov-file
 # if debug
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   message("Debug build ENABLED !")
-  add_compile_options(-pg)
+  add_compile_options(-pg -O2 -DNDEBUG)
   set(catkin_LIBRARIES ${catkin_LIBRARIES} -pg)
 endif()
 ###

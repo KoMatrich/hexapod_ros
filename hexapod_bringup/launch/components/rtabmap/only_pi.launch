@@ -50,7 +50,7 @@
       <!-- "Create occupancy grid from selected sensor: 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)." -->
       <param name="Grid/Sensor" type="string" value="2"/>
       <!-- 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) -->
-      <param name="Odom/Strategy" value="0"/>
+      <param name="Odom/Strategy" value="1"/>
       <!-- Correspondences: 0=Features Matching, 1=Optical Flow -->
       <param name="Vis/CorType" value="0"/>
       <!-- maximum features map size, default 2000 -->

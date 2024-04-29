@@ -331,6 +331,12 @@
        </item>
        <item row="0" column="1">
         <widget class="QPushButton" name="RPushButtonY">
+         <property name="styleSheet">
+          <string notr="true">color: rgb(255, 211, 52);
+background-color: rgb(247, 175, 10);
+border-radius: 2px;
+font-weight: bold;</string>
+         </property>
          <property name="text">
           <string>Y</string>
          </property>
@@ -366,16 +372,16 @@
    <item>
     <layout class="QHBoxLayout" name="RosInfoBar">
      <item>
-      <widget class="QLabel" name="RosTime">
+      <widget class="QLabel" name="RosFrameId">
        <property name="text">
-        <string>No time data recived</string>
+        <string>No frame id recieved</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="RosFrameId">
+      <widget class="QLabel" name="RosTime">
        <property name="text">
-        <string>No frame id recieved</string>
+        <string>No time data recived</string>
        </property>
       </widget>
      </item>
