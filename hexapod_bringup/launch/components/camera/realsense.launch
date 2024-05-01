@@ -13,23 +13,31 @@
 
     <!-- segmentation fault fix / Hardware failiure-->
     <!-- REF: https://github.com/IntelRealSense/realsense-ros/issues/669#issuecomment-472228935 -->
-    <arg name="enable_confidence" value="false"/>
+    <arg name="enable_confidence" value="true"/>
     <arg name="publish_tf" value="false"/>
 
-    <arg name="enable_depth" value="false"/>
-    <arg name="depth_fps" value="1"/>
+    <arg name="filters" value="pointcloud"/>
 
-    <arg name="enable_color" value="false"/>
+    <!--
+    <arg name="enable_depth" value="true"/>
+    <arg name="depth_fps" value="1"/>
+    -->
+
+    <!--
+    <arg name="enable_color" value="true"/>
     <arg name="color_width" value="640"/>
     <arg name="color_height" value="480"/>
     <arg name="color_fps" value="1"/>
+    -->
 
+    <!--
     <arg name="enable_infra" value="false"/>
     <arg name="infra_width" value="640"/>
     <arg name="infra_height" value="480"/>
 
     <arg name="gyro_fps" value="1"/>
     <arg name="accel_fps" value="1"/>
+    -->
   </include>
 
   <!-- using cammera as main imu (republishing data under different topic)-->
