@@ -9,10 +9,9 @@ int main(int argc, char *argv[])
 
     MainGui main_window;
 
-    main_window.setWindowTitle(QString::fromStdString(
-        "Qt UI"));
+    main_window.setWindowTitle(QString::fromStdString("Hexapod Control Panel"));
 
-    QIcon icon(":/icons/my_gui_icon.png");
+    QIcon icon(":/icon.ico");
     main_window.setWindowIcon(icon);
 
     main_window.show();
