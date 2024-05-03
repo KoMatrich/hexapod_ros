@@ -87,6 +87,8 @@ sudo apt-get -y install ros-noetic-image-transport-plugins
 sudo apt-get -y install ccache distcc
 ```
 
+Example configuration
+
 ```bash
 export DISTCC_HOSTS='localhost/4'
 
@@ -108,7 +110,7 @@ catkin build
 cd src && source bash_scripts/source_robot.sh
 ```
 
-Optionally to speed up compile time:
+Optionally to speed up next compilation:
 
 ```bash
 catkin build --env-cache
@@ -138,4 +140,4 @@ Change: CMAKE_CXX_FLAGS:STRING=-O3 -pipe -march=armv7-a -mcpu=cortex-a9 -mfloat-
 
 ### [General guide](https://catkin-tools.readthedocs.io/en/latest/cheat_sheet.html#profile-cookbook)
 
-## [Issues](isues.md)
+## [Issues](issues.md)

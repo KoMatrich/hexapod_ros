@@ -23,12 +23,15 @@ This is my implementation of a hexapod functioning in the ROS framework. Works m
 
 ## [Nodes](doc/nodes.md)
 
-**Example Launch Command**
+**Example Launch Commands**
 
-```
+```bash
 roslaunch hexapod_bringup hexapod_simple.launch # without mapping enabled
-
 roslaunch hexapod_bringup hexapod_full.launch # with mapping enabled
+
+roslaunch hexapod_navigation move_base.launch # navigation
+
+rosrun hexapod_gui main_gui_node # gui node (requires roscore to be running)
 ```
 
 ## Videos
